@@ -3,7 +3,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { AuthProvider } from './context/AuthContext';
 import { RoleProvider } from './context/RoleContext';
 import { ThemeProvider } from './context/ThemeContext';
-import { GuestRoute, ProtectedRoute } from './components/RouteGuards';
+import { GuestRoute, ProtectedRoute, AppHomeRedirect } from './components/RouteGuards';
 import SignupPage from './pages/SignupPage';
 import LoginPage from './pages/LoginPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
@@ -39,7 +39,7 @@ function AppRoutes() {
       <Route element={<ProtectedRoute />}>
         <Route path="/dashboard" element={<Navigate to="/app/events" replace />} />
         <Route path="/app" element={<AppShell />}>
-          <Route index element={<Navigate to="events" replace />} />
+          <Route index element={<AppHomeRedirect />} />
           <Route path="dashboard" element={<MediaFlowRouter />} />
           <Route path="events" element={<MediaFlowRouter />} />
           <Route path="events/:eventId" element={<MediaFlowRouter />} />

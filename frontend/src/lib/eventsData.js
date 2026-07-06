@@ -1,3 +1,18 @@
+export const EDITOR_EVENT_STATUSES = [
+  { value: 'event-scheduled', label: 'Event Scheduled', className: 'bg-blue-100 text-blue-800' },
+  { value: 'editing-ongoing', label: 'Editing Ongoing', className: 'bg-amber-100 text-amber-800' },
+  { value: 'footage-received', label: 'Footage Received', className: 'bg-blue-100 text-blue-800' },
+  { value: 'event-done', label: 'Editing Done', className: 'bg-green-100 text-green-800' },
+];
+
+export const CAMERAMAN_EVENT_STATUSES = [
+  { value: 'cancelled', label: 'Event Cancelled', className: 'bg-red-100 text-red-800' },
+  { value: 'scheduled', label: 'Event Scheduled', className: 'bg-blue-100 text-blue-800' },
+  { value: 'started', label: 'Event Started', className: 'bg-amber-100 text-amber-800' },
+  { value: 'footage-covered', label: 'Event Footage Covered', className: 'bg-green-100 text-green-800' },
+  { value: 'delivered', label: 'Event Done', className: 'bg-emerald-100 text-emerald-800' },
+];
+
 export const EVENTS = [
   {
     id: '1',
@@ -9,8 +24,12 @@ export const EVENTS = [
     date: 'Oct 12, 2024',
     time: '09:00 AM EST',
     location: 'San Francisco, CA',
-    status: { label: 'Upcoming', variant: 'neutral' },
+    type: 'Live Broadcast',
+    cameraman: 'James Wilson',
+    live: false,
     badge: 'Active Event',
+    editorStatus: 'footage-received',
+    cameramanStatus: 'scheduled',
   },
   {
     id: '2',
@@ -22,8 +41,12 @@ export const EVENTS = [
     date: 'Nov 05, 2024',
     time: '07:30 PM CET',
     location: 'Paris, France',
-    status: { label: 'In planning', variant: 'muted' },
+    type: 'Social Media Reel',
+    cameraman: 'Elena Rodriguez',
+    live: false,
     badge: 'In Planning',
+    editorStatus: 'editing-ongoing',
+    cameramanStatus: 'scheduled',
   },
   {
     id: '3',
@@ -35,9 +58,12 @@ export const EVENTS = [
     date: 'Happening now',
     time: 'Started at 08:00 AM',
     location: 'New York, NY',
+    type: 'Live Broadcast',
+    cameraman: 'Marcus Chen',
     live: true,
-    status: { label: 'Live', variant: 'live', pulse: true },
     badge: 'Live Now',
+    editorStatus: 'editing-ongoing',
+    cameramanStatus: 'started',
   },
   {
     id: '4',
@@ -49,17 +75,16 @@ export const EVENTS = [
     date: 'Dec 01, 2024',
     time: '10:00 AM GMT',
     location: 'London, UK',
-    status: { label: 'Upcoming', variant: 'neutral' },
+    type: 'Documentary',
+    cameraman: 'Sarah Jenkins',
+    live: false,
     badge: 'Active Event',
+    editorStatus: 'event-done',
+    cameramanStatus: 'footage-covered',
   },
 ];
 
-export const VIDEO_TYPES = [
-  'Shortform (Vertical)',
-  'Longform (16:9)',
-  'B-Roll Asset',
-  'Interview Clip',
-];
+export const VIDEO_TYPES = ['Shortform', 'Longform'];
 
 export const SOCIAL_PLATFORMS = ['Facebook', 'Instagram', 'YouTube', 'Threads'];
 
@@ -81,4 +106,12 @@ export const DEFAULT_VIDEOS = [
 
 export function getEventById(eventId) {
   return EVENTS.find((e) => e.id === eventId || e.slug === eventId);
+}
+
+export function getEditorStatusMeta(value) {
+  return EDITOR_EVENT_STATUSES.find((s) => s.value === value) ?? EDITOR_EVENT_STATUSES[0];
+}
+
+export function getCameramanStatusMeta(value) {
+  return CAMERAMAN_EVENT_STATUSES.find((s) => s.value === value) ?? CAMERAMAN_EVENT_STATUSES[0];
 }

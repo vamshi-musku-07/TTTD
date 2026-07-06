@@ -82,6 +82,11 @@ const userSchema = new mongoose.Schema(
     lastLoginAt: {
       type: Date,
     },
+    role: {
+      type: String,
+      enum: ['editor', 'photographer', 'admin', 'super_admin'],
+      default: 'editor',
+    },
   },
   {
     timestamps: true,
@@ -97,7 +102,8 @@ const userSchema = new mongoose.Schema(
 );
 
 userSchema.virtual('fullName').get(function fullName() {
-  return `${this.firstName} ${this.lastName}`;
+  if (this.firstName === this.lastName) return this.firstName;
+  return `${this.firstName} ${this.lastName}`.trim();
 });
 
 userSchema.methods.isLocked = function isLocked() {

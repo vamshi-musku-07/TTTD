@@ -5,12 +5,13 @@ import { useRole } from '../context/RoleContext';
 import { useTheme } from '../context/ThemeContext';
 import { ThemeToggle } from '../components/mediaflow/ThemeToggle';
 import { FloatingSidebar, useRailBreadcrumb } from '../components/mediaflow/FloatingSidebar';
+import NotificationBell from '../components/mediaflow/NotificationBell';
 import '../styles/mediaflow.css';
 
 export default function MediaFlowLayout() {
   const { user, logout } = useAuth();
-  const { role, roles, selectRole, roleInfo, isAdmin } = useRole();
-  const { theme, mobileNavOpen, closeMobileNav, toggleSidebar } = useTheme();
+  const { roleInfo } = useRole();
+  const { theme, mobileNavOpen, closeMobileNav, toggleSidebar, sidebarCollapsed } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
   const breadcrumb = useRailBreadcrumb();
@@ -19,17 +20,15 @@ export default function MediaFlowLayout() {
     location.pathname.endsWith('/dashboard') ||
     location.pathname.endsWith('/events') ||
     location.pathname.endsWith('/complaints') ||
+    location.pathname.endsWith('/team') ||
     /\/events\/[^/]+$/.test(location.pathname);
 
-  const handleRoleChange = (newRole) => {
-    selectRole(newRole);
-    if (newRole === 'admin') navigate('/app/dashboard');
-    else if (newRole === 'editor') navigate('/app/events');
-    else if (newRole === 'photographer') navigate('/app/events');
-    else navigate('/app/dashboard');
-  };
-
-  const displayName = user?.fullName || `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
+  const displayName = (() => {
+    const first = user?.firstName || '';
+    const last = user?.lastName || '';
+    if (first && first === last) return first;
+    return user?.fullName?.trim() || `${first} ${last}`.trim();
+  })();
   const firstName = user?.firstName || displayName.split(' ')[0] || 'there';
   const avatar =
     user?.avatar ||
@@ -44,9 +43,16 @@ export default function MediaFlowLayout() {
     closeMobileNav();
   }, [breadcrumb, closeMobileNav]);
 
+  useEffect(() => {
+    document.body.style.overflow = mobileNavOpen ? 'hidden' : '';
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileNavOpen]);
+
   return (
     <div
-      className={`mediaflow-app ${mobileNavOpen ? 'mobile-nav-open' : ''}`}
+      className={`mediaflow-app ${mobileNavOpen ? 'mobile-nav-open' : ''} ${sidebarCollapsed ? 'sidebar-collapsed' : ''}`}
       data-theme={theme}
     >
       <FloatingSidebar onLogout={handleLogout} />
@@ -56,7 +62,7 @@ export default function MediaFlowLayout() {
           <div className="flex items-center gap-3 min-w-0 flex-1">
             <button
               type="button"
-              className="mf-icon-btn lg:hidden"
+              className="mf-icon-btn mf-mobile-menu-btn"
               onClick={toggleSidebar}
               aria-label="Open menu"
             >
@@ -71,36 +77,12 @@ export default function MediaFlowLayout() {
           <div className="flex items-center gap-2 md:gap-3 shrink-0">
             <ThemeToggle />
 
-            <div className="relative hidden md:block">
-              <label htmlFor="role-select" className="sr-only">
-                Select role
-              </label>
-              <select
-                id="role-select"
-                value={role}
-                onChange={(e) => handleRoleChange(e.target.value)}
-                className="mf-select"
-              >
-                {roles.map((r) => (
-                  <option key={r.id} value={r.id}>
-                    {r.label}
-                  </option>
-                ))}
-              </select>
-              <span className="material-symbols-outlined mf-select-chevron">expand_more</span>
-            </div>
-
-            <button type="button" className="mf-icon-btn" aria-label="Notifications">
-              <span className="material-symbols-outlined">notifications</span>
-            </button>
+            <NotificationBell />
 
             <div className="mf-user-chip hidden sm:flex">
               <div className="text-right hidden lg:block">
                 <p className="mf-text-user-name">{displayName}</p>
-                <div className="flex items-center justify-end gap-2 mt-0.5">
-                  {isAdmin && <span className="mf-admin-badge">Admin</span>}
-                  <p className="mf-text-meta">{roleInfo.title}</p>
-                </div>
+                <p className="mf-text-meta mt-0.5">{roleInfo.title}</p>
               </div>
               <img alt="" className="mf-avatar" src={avatar} />
             </div>
@@ -122,7 +104,7 @@ export default function MediaFlowLayout() {
       </div>
 
       {mobileNavOpen && (
-        <div className="mf-mobile-scrim lg:hidden" onClick={closeMobileNav} aria-hidden="true" />
+        <div className="mf-mobile-scrim" onClick={closeMobileNav} aria-hidden="true" />
       )}
     </div>
   );

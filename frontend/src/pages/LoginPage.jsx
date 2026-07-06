@@ -14,6 +14,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { loginSchema } from '../lib/validation';
 import { ApiError } from '../lib/api';
+import { getDefaultAppRoute } from '../lib/appRoutes';
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -35,8 +36,8 @@ export default function LoginPage() {
   const onSubmit = async (data) => {
     setServerError('');
     try {
-      await login(data);
-      navigate('/app/events');
+      const result = await login(data);
+      navigate(getDefaultAppRoute(result.user?.role));
     } catch (err) {
       setServerError(err instanceof ApiError ? err.message : 'Invalid email or password.');
     }
@@ -46,8 +47,8 @@ export default function LoginPage() {
     setServerError('');
     setGoogleLoading(true);
     try {
-      await googleAuth(response.credential, true);
-      navigate('/app/events');
+      const result = await googleAuth(response.credential, true);
+      navigate(getDefaultAppRoute(result.user?.role));
     } catch (err) {
       setServerError(
         err instanceof ApiError ? err.message : 'Google sign-in failed. Please try again.'

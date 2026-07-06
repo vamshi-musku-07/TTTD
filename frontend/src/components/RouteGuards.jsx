@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { getDefaultAppRoute } from '../lib/appRoutes';
 
 function LoadingScreen() {
   return (
@@ -22,9 +23,16 @@ export function ProtectedRoute() {
 }
 
 export function GuestRoute() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
 
   if (loading) return <LoadingScreen />;
-  if (isAuthenticated) return <Navigate to="/app/events" replace />;
+  if (isAuthenticated) return <Navigate to={getDefaultAppRoute(user?.role)} replace />;
   return <Outlet />;
+}
+
+export function AppHomeRedirect() {
+  const { user, loading } = useAuth();
+
+  if (loading) return <LoadingScreen />;
+  return <Navigate to={getDefaultAppRoute(user?.role)} replace />;
 }

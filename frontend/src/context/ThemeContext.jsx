@@ -12,7 +12,9 @@ export function ThemeProvider({ children }) {
   });
 
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
-    return localStorage.getItem(SIDEBAR_KEY) === 'true';
+    const stored = localStorage.getItem(SIDEBAR_KEY);
+    if (stored === null) return true;
+    return stored === 'true';
   });
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false);

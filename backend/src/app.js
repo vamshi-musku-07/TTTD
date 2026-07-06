@@ -4,6 +4,12 @@ const cors = require('cors');
 const cookieParser = require('cookie-parser');
 const { clientUrl } = require('./config/env');
 const authRoutes = require('./routes/auth.routes');
+const eventsRoutes = require('./routes/events.routes');
+const videosRoutes = require('./routes/videos.routes');
+const complaintsRoutes = require('./routes/complaints.routes');
+const dashboardRoutes = require('./routes/dashboard.routes');
+const teamRoutes = require('./routes/team.routes');
+const notificationsRoutes = require('./routes/notifications.routes');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -21,7 +27,7 @@ app.use(
     origin: clientUrl,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Active-Role'],
   })
 );
 
@@ -33,6 +39,12 @@ app.get('/api/health', (_req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/events', eventsRoutes);
+app.use('/api/videos', videosRoutes);
+app.use('/api/complaints', complaintsRoutes);
+app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/team', teamRoutes);
+app.use('/api/notifications', notificationsRoutes);
 
 app.use((_req, res) => {
   res.status(404).json({ success: false, message: 'Not found' });

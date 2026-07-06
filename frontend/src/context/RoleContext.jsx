@@ -1,39 +1,30 @@
-import { createContext, useContext, useMemo, useState } from 'react';
-
-const ROLES = {
-  editor: { id: 'editor', label: 'Editor', title: 'Senior Editor' },
-  photographer: { id: 'photographer', label: 'Cameraman', title: 'Lead Cameraman' },
-  admin: { id: 'admin', label: 'Admin', title: 'Administrator' },
-};
-
-const ROLE_KEY = 'tttd_active_role';
+import { createContext, useContext, useMemo } from 'react';
+import { useAuth } from './AuthContext';
+import { ROLE_TITLES } from '../lib/appRoutes';
 
 const RoleContext = createContext(null);
 
 export function RoleProvider({ children }) {
-  const [role, setRole] = useState(() => {
-    const stored = localStorage.getItem(ROLE_KEY);
-    return ROLES[stored] ? stored : 'editor';
-  });
+  const { user } = useAuth();
+  const role = user?.role || 'editor';
 
-  const selectRole = (roleId) => {
-    if (!ROLES[roleId]) return;
-    setRole(roleId);
-    localStorage.setItem(ROLE_KEY, roleId);
-  };
+  const value = useMemo(() => {
+    const isSuperAdmin = role === 'super_admin';
+    const isAdmin = role === 'admin' || isSuperAdmin;
 
-  const value = useMemo(
-    () => ({
+    return {
       role,
-      roleInfo: ROLES[role],
-      roles: Object.values(ROLES),
-      selectRole,
+      roleInfo: {
+        id: role,
+        label: ROLE_TITLES[role] || role,
+        title: ROLE_TITLES[role] || role,
+      },
       isEditor: role === 'editor',
-      isAdmin: role === 'admin',
+      isAdmin,
+      isSuperAdmin,
       isPhotographer: role === 'photographer',
-    }),
-    [role]
-  );
+    };
+  }, [role]);
 
   return <RoleContext.Provider value={value}>{children}</RoleContext.Provider>;
 }

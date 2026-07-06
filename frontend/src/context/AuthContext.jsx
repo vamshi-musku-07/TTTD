@@ -1,38 +1,60 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { api } from '../lib/api';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { api, configureApiAuth, isSessionExpiredError } from '../lib/api';
 
 const AuthContext = createContext(null);
 
 const ACCESS_KEY = 'tttd_access_token';
+const REFRESH_INTERVAL_MS = 12 * 60 * 1000;
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [accessToken, setAccessToken] = useState(() => localStorage.getItem(ACCESS_KEY));
   const [loading, setLoading] = useState(true);
+  const accessTokenRef = useRef(accessToken);
+
+  useEffect(() => {
+    accessTokenRef.current = accessToken;
+  }, [accessToken]);
 
   const persistSession = useCallback((data) => {
     setUser(data.user);
     setAccessToken(data.accessToken);
     localStorage.setItem(ACCESS_KEY, data.accessToken);
+    accessTokenRef.current = data.accessToken;
   }, []);
 
   const clearSession = useCallback(() => {
     setUser(null);
     setAccessToken(null);
     localStorage.removeItem(ACCESS_KEY);
+    accessTokenRef.current = null;
   }, []);
+
+  useEffect(() => {
+    configureApiAuth({
+      getToken: () => accessTokenRef.current || localStorage.getItem(ACCESS_KEY),
+      onTokenRefreshed: (data) => {
+        persistSession(data);
+      },
+      onSessionExpired: () => {
+        clearSession();
+      },
+    });
+  }, [persistSession, clearSession]);
 
   const bootstrap = useCallback(async () => {
     const stored = localStorage.getItem(ACCESS_KEY);
+
     if (stored) {
       try {
         const data = await api.me(stored);
-        setUser(data.user);
-        setAccessToken(stored);
-        setLoading(false);
+        persistSession({
+          user: data.user,
+          accessToken: localStorage.getItem(ACCESS_KEY) || stored,
+        });
         return;
-      } catch {
-        localStorage.removeItem(ACCESS_KEY);
+      } catch (err) {
+        if (isSessionExpiredError(err)) return;
       }
     }
 
@@ -41,14 +63,30 @@ export function AuthProvider({ children }) {
       persistSession(data);
     } catch {
       clearSession();
-    } finally {
-      setLoading(false);
     }
   }, [persistSession, clearSession]);
 
   useEffect(() => {
-    bootstrap();
+    bootstrap().finally(() => setLoading(false));
   }, [bootstrap]);
+
+  useEffect(() => {
+    if (!user || !accessToken) return undefined;
+
+    const refreshSession = async () => {
+      try {
+        const data = await api.refresh();
+        persistSession(data);
+      } catch (err) {
+        if (!isSessionExpiredError(err)) {
+          clearSession();
+        }
+      }
+    };
+
+    const interval = setInterval(refreshSession, REFRESH_INTERVAL_MS);
+    return () => clearInterval(interval);
+  }, [user, accessToken, persistSession, clearSession]);
 
   const signup = useCallback(
     async (payload) => {

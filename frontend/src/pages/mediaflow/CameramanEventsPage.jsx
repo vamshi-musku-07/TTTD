@@ -1,22 +1,12 @@
-import { useState } from 'react';
-import {
-  ACTIVITY_STATS,
-  ASSIGNED_EVENTS,
-} from '../../lib/cameramanEventsData';
+import { useState, useEffect } from 'react';
+import { api } from '../../lib/api';
+import { getCameramanStatusMeta } from '../../lib/eventsData';
 
 const fieldClass =
   'w-full rounded-xl border border-outline-variant bg-surface-bright px-4 py-2.5 text-sm text-on-surface outline-none transition-colors focus:border-primary';
 
-function EventStatusBadge({ label, className }) {
-  return (
-    <span className={`inline-flex rounded-full px-2 py-0.5 text-[11px] font-bold uppercase tracking-tight ${className}`}>
-      {label}
-    </span>
-  );
-}
-
 export default function CameramanEventsPage() {
-  const [events, setEvents] = useState(ASSIGNED_EVENTS);
+  const [assignedEvents, setAssignedEvents] = useState([]);
   const [title, setTitle] = useState('');
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
@@ -24,17 +14,18 @@ export default function CameramanEventsPage() {
   const [fieldErrors, setFieldErrors] = useState({});
   const [submitState, setSubmitState] = useState('idle');
 
-  const pendingCount = events.filter((e) => e.status !== 'Completed').length;
+  useEffect(() => {
+    api.getEvents().then((data) => {
+      setAssignedEvents(data.events.filter((e) => e.cameraman && e.cameraman !== 'Unassigned'));
+    }).catch(() => setAssignedEvents([]));
+  }, []);
 
-  const handleMarkShot = (eventId) => {
-    setEvents((prev) =>
-      prev.map((event) =>
-        event.id === eventId
-          ? { ...event, status: 'Completed', statusClass: 'bg-green-100 text-green-800' }
-          : event
-      )
-    );
-  };
+  const pendingCount = assignedEvents.filter(
+    (e) =>
+      e.cameramanStatus !== 'footage-covered' &&
+      e.cameramanStatus !== 'delivered' &&
+      e.cameramanStatus !== 'cancelled'
+  ).length;
 
   const handleBookingSubmit = (e) => {
     e.preventDefault();
@@ -45,7 +36,7 @@ export default function CameramanEventsPage() {
     if (!time) errors.time = true;
 
     setFieldErrors(errors);
-    if (Object.keys(errors).length > 0 || submitState !== 'idle') return;
+    if (Object.keys(errors).length > 0 || submitState !== 'idle') return; 
 
     setSubmitState('submitting');
 
@@ -70,9 +61,9 @@ export default function CameramanEventsPage() {
         : 'Add Private Booking';
 
   return (
-    <div className="mx-auto max-w-9xl space-y-gutter">
+    <div className="mx-auto max-w-7xl space-y-gutter">
       <div>
-        <h1 className="mf-text-display text-[32px] leading-tight">Cameraman Portal</h1>
+        <h1 className="mf-text-display text-[32px] leading-tight">Dashboard</h1>
         <p className="mf-text-body mt-2 text-[16px]">
           Manage your assigned shoots and schedule private bookings.
         </p>
@@ -83,10 +74,10 @@ export default function CameramanEventsPage() {
           <div className="flex items-center justify-between border-b border-outline-variant px-6 py-4">
             <h3 className="mf-text-card-title flex items-center gap-2">
               <span className="material-symbols-outlined text-primary">assignment</span>
-              My Assigned Events
+              Upcoming Assignments
             </h3>
             <span className="rounded-full bg-surface-container-high px-3 py-1 mf-text-label-caps">
-              {pendingCount} Pending
+              {pendingCount} Active
             </span>
           </div>
 
@@ -94,44 +85,45 @@ export default function CameramanEventsPage() {
             <table className="w-full border-collapse text-left">
               <thead>
                 <tr className="bg-surface-container-low">
-                  {['Event Details', 'Time & Venue', 'Status', 'Actions'].map((col, i) => (
-                    <th
-                      key={col}
-                      className={`px-6 py-4 mf-text-label-caps text-[11px] ${i === 3 ? 'text-right' : ''}`}
-                    >
+                  {['Event Details', 'Time & Location', 'Status'].map((col) => (
+                    <th key={col} className="px-6 py-4 mf-text-label-caps text-[11px]">
                       {col}
                     </th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-outline-variant">
-                {events.map((event) => (
-                  <tr key={event.id} className="transition-colors hover:bg-surface-container-low/50">
-                    <td className="px-6 py-5">
-                      <div className="font-semibold text-on-surface">{event.title}</div>
-                      <div className="mt-0.5 text-xs text-on-surface-variant">Production #{event.id}</div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <div className="text-sm text-on-surface">{event.datetime}</div>
-                      <div className="mt-0.5 text-xs text-on-surface-variant">{event.venue}</div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <EventStatusBadge label={event.status} className={event.statusClass} />
-                    </td>
-                    <td className="px-6 py-5 text-right">
-                      <button
-                        type="button"
-                        onClick={() => handleMarkShot(event.id)}
-                        disabled={event.status === 'Completed'}
-                        className="mf-btn-primary !h-9 !px-4 !text-xs active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        Mark Shot
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {assignedEvents.map((event) => {
+                  const statusMeta = getCameramanStatusMeta(event.cameramanStatus);
+                  return (
+                    <tr key={event.id} className="transition-colors hover:bg-surface-container-low/50">
+                      <td className="px-6 py-5">
+                        <div className="font-semibold text-on-surface">{event.title}</div>
+                        <div className="mt-0.5 text-xs text-on-surface-variant">{event.subtitle}</div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <div className="text-sm text-on-surface">{event.date}</div>
+                        <div className="mt-0.5 text-xs text-on-surface-variant">{event.location}</div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span
+                          className={`inline-flex rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${statusMeta.className}`}
+                        >
+                          {statusMeta.label}
+                        </span>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
+          </div>
+
+          <div className="border-t border-outline-variant px-6 py-3">
+            <p className="mf-text-meta">
+              Update event status from the{' '}
+              <span className="font-semibold text-on-surface">Events</span> page.
+            </p>
           </div>
         </section>
 
@@ -214,37 +206,6 @@ export default function CameramanEventsPage() {
                 {bookingLabel}
               </button>
             </form>
-          </div>
-        </section>
-
-        <section className="mf-card col-span-12 p-6">
-          <div className="mb-6 flex items-center justify-between gap-4">
-            <h3 className="mf-text-card-title">Recent Activity</h3>
-            <button type="button" className="flex items-center gap-1 mf-text-label-caps text-primary hover:underline">
-              View All History
-              <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-            {ACTIVITY_STATS.map((stat) => (
-              <div
-                key={stat.label}
-                className="flex items-center gap-4 rounded-xl border border-outline-variant bg-surface p-4"
-              >
-                <div
-                  className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${stat.iconClass}`}
-                >
-                  <span className="material-symbols-outlined">{stat.icon}</span>
-                </div>
-                <div>
-                  <p className="mf-text-label-caps">{stat.label}</p>
-                  <p className="text-[24px] font-semibold leading-tight tracking-tight text-on-surface">
-                    {stat.value}
-                  </p>
-                </div>
-              </div>
-            ))}
           </div>
         </section>
       </div>

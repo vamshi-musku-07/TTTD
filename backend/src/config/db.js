@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { mongoUri } = require('./env');
+const { seedSuperAdmin } = require('./seed');
 
 async function connectDB() {
   if (!mongoUri) {
@@ -13,6 +14,7 @@ async function connectDB() {
   });
 
   console.log('[db] Connected to MongoDB');
+  await seedSuperAdmin();
 }
 
 module.exports = { connectDB };

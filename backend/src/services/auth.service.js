@@ -26,6 +26,7 @@ function sanitizeUser(user) {
     avatar: user.avatar,
     authProvider: user.authProvider,
     isEmailVerified: user.isEmailVerified,
+    role: user.role || 'editor',
     createdAt: user.createdAt,
   };
 }
