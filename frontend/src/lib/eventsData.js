@@ -85,6 +85,7 @@ export const EVENTS = [
 ];
 
 export const VIDEO_TYPES = ['Shortform', 'Longform'];
+export const RAW_VIDEO_TYPE = 'Raw';
 
 export const SOCIAL_PLATFORMS = ['Facebook', 'Instagram', 'YouTube', 'Threads'];
 

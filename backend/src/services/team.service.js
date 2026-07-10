@@ -25,9 +25,9 @@ function formatDisplayName(firstName, lastName) {
 }
 
 function formatInitials(firstName, lastName) {
-  if (!firstName) return 'U';
-  if (firstName === lastName) return firstName.slice(0, 2).toUpperCase();
-  return `${firstName[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
+  const name = formatDisplayName(firstName, lastName);
+  if (!name) return 'U';
+  return name[0].toUpperCase();
 }
 
 function formatJoinedAt(date) {

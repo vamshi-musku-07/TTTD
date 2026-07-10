@@ -3,19 +3,18 @@ import { useAuth } from '../../context/AuthContext';
 import { useRole } from '../../context/RoleContext';
 import { api, ApiError, isSessionExpiredError } from '../../lib/api';
 import { TEAM_ROLES, TEAM_ROLE_STYLES, getRoleLabel } from '../../lib/teamData';
+import { NameAvatar } from '../../components/NameAvatar';
 
 const fieldClass =
   'w-full rounded-xl border border-outline-variant bg-surface-bright px-4 py-3 text-sm text-on-surface outline-none transition-colors focus:border-primary';
 
 function MemberAvatar({ member }) {
-  if (member.avatar) {
-    return <img src={member.avatar} alt="" className="h-16 w-16 rounded-2xl object-cover bg-surface-container" />;
-  }
-
   return (
-    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-container text-lg font-bold text-on-primary">
-      {member.initials ?? member.name.slice(0, 2).toUpperCase()}
-    </div>
+    <NameAvatar
+      name={member.name}
+      className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-container text-lg font-bold text-on-primary border-2 border-surface-container-lowest shadow-sm"
+      title={member.name}
+    />
   );
 }
 

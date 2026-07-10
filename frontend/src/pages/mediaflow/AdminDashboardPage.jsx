@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { api, ApiError, isSessionExpiredError } from '../../lib/api';
 import UploadFrequencyChart from '../../components/mediaflow/UploadFrequencyChart';
+import { NameAvatar } from '../../components/NameAvatar';
 
 function getComplaintActiveRole(user) {
   if (user?.role === 'super_admin') return 'super_admin';
@@ -11,25 +12,16 @@ function getComplaintActiveRole(user) {
 }
 
 function ComplaintPreviewCard({ complaint, onResolve, resolving }) {
-  const initials = complaint.name
-    .split(' ')
-    .map((part) => part[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
-
   return (
     <div className="mf-card relative flex flex-col gap-4 overflow-hidden p-5">
       <div className="absolute bottom-0 left-0 top-0 w-1 rounded-l-[24px] bg-error" />
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-3">
-          {complaint.avatar ? (
-            <img src={complaint.avatar} alt="" className="h-10 w-10 shrink-0 rounded-full object-cover bg-surface-container" />
-          ) : (
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
-              {initials}
-            </div>
-          )}
+          <NameAvatar
+            name={complaint.name}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary"
+            title={complaint.name}
+          />
           <div className="min-w-0">
             <h4 className="mf-text-card-title truncate text-sm">{complaint.name}</h4>
             <p className="mf-text-meta">{complaint.role}</p>

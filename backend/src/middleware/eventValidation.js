@@ -30,7 +30,7 @@ const updateEventStatusSchema = z
 
 const createVideoSchema = z.object({
   title: z.string().trim().min(1, 'Video name is required').max(200),
-  type: z.enum(['Shortform', 'Longform']),
+  type: z.enum(['Shortform', 'Longform', 'Raw']),
   videoUrl: z
     .string()
     .trim()
@@ -44,7 +44,7 @@ const createVideoSchema = z.object({
 
 const updateVideoSchema = z.object({
   title: z.string().trim().min(1).max(200).optional(),
-  type: z.enum(['Shortform', 'Longform']).optional(),
+  type: z.enum(['Shortform', 'Longform', 'Raw']).optional(),
   videoUrl: z
     .string()
     .trim()

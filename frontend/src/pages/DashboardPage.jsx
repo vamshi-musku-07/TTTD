@@ -2,6 +2,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Logo } from '../components/Logo';
 import { Button } from '../components/Button';
+import { NameAvatar } from '../components/NameAvatar';
 
 export default function DashboardPage() {
   const { user, logout } = useAuth();
@@ -12,7 +13,7 @@ export default function DashboardPage() {
     navigate('/login');
   };
 
-  const initials = `${user?.firstName?.[0] || ''}${user?.lastName?.[0] || ''}`.toUpperCase();
+  const displayName = user?.fullName?.trim() || `${user?.firstName || ''} ${user?.lastName || ''}`.trim();
 
   return (
     <div className="min-h-screen auth-bg">
@@ -21,13 +22,11 @@ export default function DashboardPage() {
           <Logo size="sm" />
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex items-center gap-2.5">
-              {user?.avatar ? (
-                <img src={user.avatar} alt="" className="w-7 h-7 rounded-full" />
-              ) : (
-                <div className="w-7 h-7 rounded-full bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] flex items-center justify-center text-[10px] font-medium text-[#a1a1aa]">
-                  {initials}
-                </div>
-              )}
+              <NameAvatar
+                name={displayName}
+                className="w-7 h-7 rounded-full bg-[#1a1a1a] border border-[rgba(255,255,255,0.1)] flex items-center justify-center text-[10px] font-medium text-[#a1a1aa]"
+                title={displayName}
+              />
               <span className="text-sm text-[#a1a1aa]">{user?.email}</span>
             </div>
             <Button variant="ghost" onClick={handleLogout}>
@@ -68,17 +67,11 @@ export default function DashboardPage() {
 
         <div className="auth-card rounded-2xl p-6">
           <div className="flex items-center gap-4">
-            {user?.avatar ? (
-              <img
-                src={user.avatar}
-                alt=""
-                className="w-14 h-14 rounded-xl border border-[rgba(255,255,255,0.1)]"
-              />
-            ) : (
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#e11d48] to-[#9f1239] flex items-center justify-center text-lg font-semibold text-white">
-                {initials}
-              </div>
-            )}
+            <NameAvatar
+              name={displayName}
+              className="w-14 h-14 rounded-xl bg-gradient-to-br from-[#e11d48] to-[#9f1239] flex items-center justify-center text-lg font-semibold text-white"
+              title={displayName}
+            />
             <div>
               <p className="font-medium text-[#fafafa]">
                 {user?.firstName} {user?.lastName}

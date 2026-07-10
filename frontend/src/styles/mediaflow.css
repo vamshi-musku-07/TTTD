@@ -809,13 +809,28 @@
   border-left: 1px solid var(--mf-outline-variant);
 }
 
-.mf-avatar {
+.mf-avatar,
+.mf-avatar-letter {
   width: 40px;
   height: 40px;
   border-radius: 50%;
-  object-fit: cover;
   border: 2px solid var(--mf-surface-container-lowest);
   box-shadow: 0 2px 8px var(--mf-shadow);
+  flex-shrink: 0;
+}
+
+.mf-avatar {
+  object-fit: cover;
+}
+
+.mf-avatar-letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  background: var(--mf-primary-container);
+  color: var(--mf-on-primary);
 }
 
 .mf-admin-badge {
@@ -996,6 +1011,16 @@
 
   .mediaflow-app.mobile-nav-open .mf-sidebar-rail {
     transform: translateX(0);
+  }
+
+  .mediaflow-app.mobile-nav-open.sidebar-collapsed {
+    --mf-rail-width: min(280px, calc(100vw - 32px));
+  }
+
+  .mediaflow-app.mobile-nav-open .mf-rail-brand,
+  .mediaflow-app.mobile-nav-open .mf-rail-label,
+  .mediaflow-app.mobile-nav-open .mf-rail-logout-label {
+    display: inline;
   }
 
   .mediaflow-app.mobile-nav-open .mf-rail-panel {

@@ -6,6 +6,7 @@ import { useTheme } from '../context/ThemeContext';
 import { ThemeToggle } from '../components/mediaflow/ThemeToggle';
 import { FloatingSidebar, useRailBreadcrumb } from '../components/mediaflow/FloatingSidebar';
 import NotificationBell from '../components/mediaflow/NotificationBell';
+import { NameAvatar } from '../components/NameAvatar';
 import '../styles/mediaflow.css';
 
 export default function MediaFlowLayout() {
@@ -30,9 +31,6 @@ export default function MediaFlowLayout() {
     return user?.fullName?.trim() || `${first} ${last}`.trim();
   })();
   const firstName = user?.firstName || displayName.split(' ')[0] || 'there';
-  const avatar =
-    user?.avatar ||
-    'https://lh3.googleusercontent.com/aida-public/AB6AXuBNIZkLq1dER2iJH_LzIURjIAXTkXzofeevwT9qlc_3LkcraCED04WcrsoFYW3DUkTSFxffyFnTZlmB3Y7h3qg3fbtHg-no5u0t5lf28rXZDip4-5nTyelxeQdNpqaut-gJpoYb-33TfmFhqGH4lHP7rmLKLqiiyjwFmZxmKQ0pPrpX6LrSyGy1lcwQoXo1eGEuT1tAPS7ilFFrqLVAOJtKeNRpToixZQ1aubNXew48Wk3jV-bouLpQdg-0hrwLap97tvP9vOIFHQ';
 
   const handleLogout = async () => {
     await logout();
@@ -41,7 +39,7 @@ export default function MediaFlowLayout() {
 
   useEffect(() => {
     closeMobileNav();
-  }, [breadcrumb, closeMobileNav]);
+  }, [location.pathname, closeMobileNav]);
 
   useEffect(() => {
     document.body.style.overflow = mobileNavOpen ? 'hidden' : '';
@@ -64,7 +62,8 @@ export default function MediaFlowLayout() {
               type="button"
               className="mf-icon-btn mf-mobile-menu-btn"
               onClick={toggleSidebar}
-              aria-label="Open menu"
+              aria-label={mobileNavOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={mobileNavOpen}
             >
               <span className="material-symbols-outlined">menu</span>
             </button>
@@ -84,7 +83,7 @@ export default function MediaFlowLayout() {
                 <p className="mf-text-user-name">{displayName}</p>
                 <p className="mf-text-meta mt-0.5">{roleInfo.title}</p>
               </div>
-              <img alt="" className="mf-avatar" src={avatar} />
+              <NameAvatar name={displayName} className="mf-avatar-letter" title={displayName} />
             </div>
           </div>
         </header>

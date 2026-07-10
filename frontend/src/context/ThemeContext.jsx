@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 const THEME_KEY = 'tttd_mediaflow_theme';
 const SIDEBAR_KEY = 'tttd_sidebar_collapsed';
@@ -27,17 +27,20 @@ export function ThemeProvider({ children }) {
     localStorage.setItem(SIDEBAR_KEY, String(sidebarCollapsed));
   }, [sidebarCollapsed]);
 
-  const toggleTheme = () => setTheme((t) => (t === 'light' ? 'dark' : 'light'));
+  const toggleTheme = useCallback(
+    () => setTheme((t) => (t === 'light' ? 'dark' : 'light')),
+    []
+  );
 
-  const toggleSidebar = () => {
+  const toggleSidebar = useCallback(() => {
     if (window.matchMedia('(max-width: 1023px)').matches) {
       setMobileNavOpen((o) => !o);
     } else {
       setSidebarCollapsed((c) => !c);
     }
-  };
+  }, []);
 
-  const closeMobileNav = () => setMobileNavOpen(false);
+  const closeMobileNav = useCallback(() => setMobileNavOpen(false), []);
 
   const value = useMemo(
     () => ({
@@ -51,7 +54,7 @@ export function ThemeProvider({ children }) {
       mobileNavOpen,
       closeMobileNav,
     }),
-    [theme, sidebarCollapsed, mobileNavOpen]
+    [theme, sidebarCollapsed, mobileNavOpen, toggleTheme, toggleSidebar, closeMobileNav]
   );
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
