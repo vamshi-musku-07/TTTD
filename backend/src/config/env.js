@@ -1,18 +1,71 @@
 require('dotenv').config();
 
-const required = ['MONGODB_URI', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'GOOGLE_CLIENT_ID'];
+const PLACEHOLDER_SECRETS = new Set([
+  'change-me-access-secret-min-32-chars',
+  'change-me-refresh-secret-min-32-chars',
+]);
 
-for (const key of required) {
-  if (!process.env[key]) {
-    console.warn(`[env] Warning: ${key} is not set`);
+const nodeEnv = process.env.NODE_ENV || 'development';
+const isProd = nodeEnv === 'production';
+const isDev = !isProd;
+
+function parseClientUrls() {
+  const raw = process.env.CLIENT_URL || 'http://localhost:5173';
+  return raw
+    .split(',')
+    .map((url) => url.trim())
+    .filter(Boolean);
+}
+
+function validateProductionEnv() {
+  if (!isProd) return;
+
+  const required = [
+    'MONGODB_URI',
+    'JWT_ACCESS_SECRET',
+    'JWT_REFRESH_SECRET',
+    'GOOGLE_CLIENT_ID',
+    'CLIENT_URL',
+  ];
+
+  const missing = required.filter((key) => !process.env[key]?.trim());
+  if (missing.length > 0) {
+    console.error(`[env] Missing required production variables: ${missing.join(', ')}`);
+    process.exit(1);
+  }
+
+  for (const key of ['JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET']) {
+    const value = process.env[key];
+    if (value.length < 32 || PLACEHOLDER_SECRETS.has(value)) {
+      console.error(`[env] ${key} must be a strong secret (32+ chars) in production`);
+      process.exit(1);
+    }
   }
 }
 
+if (isDev) {
+  for (const key of ['MONGODB_URI', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'GOOGLE_CLIENT_ID']) {
+    if (!process.env[key]) {
+      console.warn(`[env] Warning: ${key} is not set`);
+    }
+  }
+}
+
+validateProductionEnv();
+
+const clientUrls = parseClientUrls();
+
 module.exports = {
-  nodeEnv: process.env.NODE_ENV || 'development',
+  nodeEnv,
+  isDev,
+  isProd,
   port: Number(process.env.PORT) || 5000,
+  host: process.env.HOST || '0.0.0.0',
   mongoUri: process.env.MONGODB_URI,
-  clientUrl: process.env.CLIENT_URL || 'http://localhost:5173',
+  clientUrl: clientUrls[0],
+  clientUrls,
+  serveFrontend: process.env.SERVE_FRONTEND === 'true',
+  frontendDistPath: process.env.FRONTEND_DIST_PATH,
   jwt: {
     accessSecret: process.env.JWT_ACCESS_SECRET,
     refreshSecret: process.env.JWT_REFRESH_SECRET,
@@ -30,5 +83,9 @@ module.exports = {
     pass: process.env.SMTP_PASS,
     from: process.env.EMAIL_FROM || 'TTTD <noreply@localhost>',
   },
-  isDev: (process.env.NODE_ENV || 'development') !== 'production',
+  cookies: {
+    secure: process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : isProd,
+    sameSite: process.env.COOKIE_SAME_SITE || (isDev ? 'lax' : 'strict'),
+    domain: process.env.COOKIE_DOMAIN || undefined,
+  },
 };

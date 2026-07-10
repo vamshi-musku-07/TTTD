@@ -1,21 +1,5 @@
 const authService = require('../services/auth.service');
-const { jwt: jwtConfig, isDev } = require('../config/env');
-
-const REFRESH_COOKIE = 'tttd_refresh';
-
-function setRefreshCookie(res, refreshToken) {
-  res.cookie(REFRESH_COOKIE, refreshToken, {
-    httpOnly: true,
-    secure: !isDev,
-    sameSite: isDev ? 'lax' : 'strict',
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    path: '/api/auth',
-  });
-}
-
-function clearRefreshCookie(res) {
-  res.clearCookie(REFRESH_COOKIE, { path: '/api/auth' });
-}
+const { REFRESH_COOKIE, setRefreshCookie, clearRefreshCookie } = require('../config/cookies');
 
 function sendAuthResponse(res, statusCode, data) {
   setRefreshCookie(res, data.refreshToken);
