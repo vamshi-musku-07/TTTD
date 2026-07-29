@@ -15,7 +15,7 @@ const createComplaintSchema = z
     description: z.string().trim().min(1, 'Description is required').max(5000),
     otherDetails: z.string().trim().max(200).optional(),
     assignedToId: z.string().min(1, 'Please select an admin recipient'),
-    submitterRole: z.enum(['editor', 'photographer'], {
+    submitterRole: z.enum(['editor'], {
       errorMap: () => ({ message: 'Invalid submitter role' }),
     }),
   })

@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import { useRole } from '../../context/RoleContext';
 import { api, ApiError, isSessionExpiredError } from '../../lib/api';
-import { TEAM_ROLES, TEAM_ROLE_STYLES, getRoleLabel } from '../../lib/teamData';
+import { TEAM_ROLE_STYLES, getRoleLabel } from '../../lib/teamData';
 import { NameAvatar } from '../../components/NameAvatar';
+import { ProfileImageField } from '../../components/ProfileImageField';
 
 const fieldClass =
   'w-full rounded-xl border border-outline-variant bg-surface-bright px-4 py-3 text-sm text-on-surface outline-none transition-colors focus:border-primary';
@@ -12,6 +13,7 @@ function MemberAvatar({ member }) {
   return (
     <NameAvatar
       name={member.name}
+      avatar={member.avatar}
       className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary-container text-lg font-bold text-on-primary border-2 border-surface-container-lowest shadow-sm"
       title={member.name}
     />
@@ -21,7 +23,7 @@ function MemberAvatar({ member }) {
 function RoleBadge({ role }) {
   return (
     <span
-      className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${TEAM_ROLE_STYLES[role]}`}
+      className={`inline-flex rounded-full border px-3 py-1 text-[10px] font-bold uppercase tracking-wide ${TEAM_ROLE_STYLES[role] || TEAM_ROLE_STYLES.editor}`}
     >
       {getRoleLabel(role)}
     </span>
@@ -44,24 +46,12 @@ function StatItem({ label, value, icon }) {
 
 function TeamMemberCard({ member, canManage, onEdit, onRemove }) {
   const isEditor = member.role === 'editor';
-  const isCameraman = member.role === 'photographer';
-  const isAdmin = member.role === 'admin';
-
   const stats = isEditor
     ? [
         { label: 'Events edited', value: member.eventsEdited, icon: 'movie_edit' },
         { label: 'Videos uploaded', value: member.videosUploaded, icon: 'upload' },
       ]
-    : isCameraman
-      ? [
-          { label: 'Events covered', value: member.eventsCovered, icon: 'videocam' },
-          {
-            label: 'Shoot status',
-            value: member.eventsCovered > 0 ? 'Active' : '—',
-            icon: 'event',
-          },
-        ]
-      : [{ label: 'Events managed', value: member.eventsManaged ?? 0, icon: 'dashboard' }];
+    : [{ label: 'Events managed', value: member.eventsManaged ?? 0, icon: 'dashboard' }];
 
   return (
     <article className="mf-card flex flex-col overflow-hidden transition-colors hover:bg-surface-container-low/40">
@@ -103,7 +93,7 @@ function TeamMemberCard({ member, canManage, onEdit, onRemove }) {
           </div>
         </div>
 
-        {canManage && (
+        {canManage && isEditor && (
           <div className="mt-auto flex gap-3 border-t border-outline-variant/60 pt-5">
             <button
               type="button"
@@ -133,10 +123,11 @@ function MemberFormModal({ title, initial, onClose, onSave, error, saving }) {
     name: initial?.name || '',
     email: initial?.email || '',
     password: '',
-    role: initial?.role || 'editor',
+    avatar: initial?.avatar || null,
   });
   const [fieldErrors, setFieldErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
+  const [imageError, setImageError] = useState('');
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -156,7 +147,7 @@ function MemberFormModal({ title, initial, onClose, onSave, error, saving }) {
     const payload = {
       name: form.name.trim(),
       email: form.email.trim(),
-      role: form.role,
+      avatar: form.avatar || '',
     };
     if (form.password.trim()) payload.password = form.password;
 
@@ -179,84 +170,92 @@ function MemberFormModal({ title, initial, onClose, onSave, error, saving }) {
             {error}
           </div>
         )}
+        {imageError && (
+          <div className="mb-4 rounded-xl border border-error/30 bg-error/5 px-4 py-3 text-sm text-error">
+            {imageError}
+          </div>
+        )}
 
         <form className="space-y-4" onSubmit={handleSubmit} noValidate>
-          <div className="grid grid-cols-1 gap-4">
-            <div>
-              <label htmlFor="member-name" className="mb-1 block mf-text-label-caps">
-                Name
-              </label>
+          <div>
+            <p className="mb-3 mf-text-label-caps">Profile photo</p>
+            <ProfileImageField
+              name={form.name}
+              avatar={form.avatar}
+              onChange={(value, errMsg) => {
+                if (errMsg) {
+                  setImageError(errMsg);
+                  return;
+                }
+                setImageError('');
+                handleChange('avatar', value);
+              }}
+              onClear={() => {
+                handleChange('avatar', null);
+                setImageError('');
+              }}
+            />
+          </div>
+
+          <div>
+            <label htmlFor="member-name" className="mb-1 block mf-text-label-caps">
+              Name
+            </label>
+            <input
+              id="member-name"
+              type="text"
+              value={form.name}
+              onChange={(e) => handleChange('name', e.target.value)}
+              className={`${fieldClass} ${fieldErrors.name ? 'border-error' : ''}`}
+            />
+          </div>
+          <div>
+            <label htmlFor="member-email" className="mb-1 block mf-text-label-caps">
+              Email
+            </label>
+            <input
+              id="member-email"
+              type="email"
+              value={form.email}
+              onChange={(e) => handleChange('email', e.target.value)}
+              className={`${fieldClass} ${fieldErrors.email ? 'border-error' : ''}`}
+            />
+          </div>
+          <div>
+            <label htmlFor="member-password" className="mb-1 block mf-text-label-caps">
+              {initial ? 'New password (optional)' : 'Password'}
+            </label>
+            <div className="relative">
               <input
-                id="member-name"
-                type="text"
-                value={form.name}
-                onChange={(e) => handleChange('name', e.target.value)}
-                className={`${fieldClass} ${fieldErrors.name ? 'border-error' : ''}`}
+                id="member-password"
+                type={showPassword ? 'text' : 'password'}
+                value={form.password}
+                onChange={(e) => handleChange('password', e.target.value)}
+                placeholder={initial ? 'Leave blank to keep current password' : 'Minimum 8 characters'}
+                className={`${fieldClass} pr-12 ${fieldErrors.password ? 'border-error' : ''}`}
               />
-            </div>
-            <div>
-              <label htmlFor="member-email" className="mb-1 block mf-text-label-caps">
-                Email
-              </label>
-              <input
-                id="member-email"
-                type="email"
-                value={form.email}
-                onChange={(e) => handleChange('email', e.target.value)}
-                className={`${fieldClass} ${fieldErrors.email ? 'border-error' : ''}`}
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <label htmlFor="member-password" className="mb-1 block mf-text-label-caps">
-                {initial ? 'New password (optional)' : 'Password'}
-              </label>
-              <div className="relative">
-                <input
-                  id="member-password"
-                  type={showPassword ? 'text' : 'password'}
-                  value={form.password}
-                  onChange={(e) => handleChange('password', e.target.value)}
-                  placeholder={initial ? 'Leave blank to keep current password' : 'Minimum 8 characters'}
-                  className={`${fieldClass} pr-12 ${fieldErrors.password ? 'border-error' : ''}`}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors"
-                  aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  tabIndex={-1}
-                >
-                  <span className="material-symbols-outlined text-[20px]">
-                    {showPassword ? 'visibility_off' : 'visibility'}
-                  </span>
-                </button>
-              </div>
-            </div>
-            <div className="sm:col-span-2">
-              <label htmlFor="member-role" className="mb-1 block mf-text-label-caps">
-                Role
-              </label>
-              <select
-                id="member-role"
-                value={form.role}
-                onChange={(e) => handleChange('role', e.target.value)}
-                className={fieldClass}
+              <button
+                type="button"
+                onClick={() => setShowPassword((v) => !v)}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface transition-colors"
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
+                tabIndex={-1}
               >
-                {TEAM_ROLES.map((role) => (
-                  <option key={role.value} value={role.value}>
-                    {role.label}
-                  </option>
-                ))}
-              </select>
+                <span className="material-symbols-outlined text-[20px]">
+                  {showPassword ? 'visibility_off' : 'visibility'}
+                </span>
+              </button>
             </div>
           </div>
+
+          <p className="text-sm text-on-surface-variant">Role is fixed to Editor.</p>
 
           <div className="flex justify-end gap-3 pt-2">
             <button type="button" className="mf-btn-secondary" onClick={onClose}>
               Cancel
             </button>
             <button type="submit" className="mf-btn-primary" disabled={saving}>
-              {saving ? 'Saving...' : initial ? 'Save Changes' : 'Add Member'}
+              {saving ? 'Saving...' : initial ? 'Save Changes' : 'Add Editor'}
             </button>
           </div>
         </form>
@@ -302,7 +301,6 @@ export default function AdminTeamPage() {
     () => ({
       total: team.length,
       editors: team.filter((m) => m.role === 'editor').length,
-      cameramen: team.filter((m) => m.role === 'photographer').length,
       admins: team.filter((m) => m.role === 'admin').length,
     }),
     [team]
@@ -322,7 +320,7 @@ export default function AdminTeamPage() {
       setAddingMember(false);
     } catch (err) {
       if (isSessionExpiredError(err)) return;
-      setModalError(err instanceof ApiError ? err.message : 'Failed to add member');
+      setModalError(err instanceof ApiError ? err.message : 'Failed to add editor');
     } finally {
       setSaving(false);
     }
@@ -338,7 +336,7 @@ export default function AdminTeamPage() {
       setEditingMember(null);
     } catch (err) {
       if (isSessionExpiredError(err)) return;
-      setModalError(err instanceof ApiError ? err.message : 'Failed to update member');
+      setModalError(err instanceof ApiError ? err.message : 'Failed to update editor');
     } finally {
       setSaving(false);
     }
@@ -353,7 +351,7 @@ export default function AdminTeamPage() {
       setRemovingMember(null);
     } catch (err) {
       if (isSessionExpiredError(err)) return;
-      setLoadError(err instanceof ApiError ? err.message : 'Failed to remove member');
+      setLoadError(err instanceof ApiError ? err.message : 'Failed to remove editor');
     } finally {
       setSaving(false);
     }
@@ -366,14 +364,14 @@ export default function AdminTeamPage() {
           <h1 className="mf-text-display text-[32px] leading-tight">Team</h1>
           <p className="mf-text-body mt-2 text-[16px]">
             {canManage
-              ? 'Add and manage admins, editors, and cameramen.'
-              : 'View admins, editors, and cameramen across MediaFlow.'}
+              ? 'Add and manage editors on MediaFlow.'
+              : 'View editors and admins across MediaFlow.'}
           </p>
         </div>
         {canManage && (
           <button type="button" className="mf-btn-primary shrink-0" onClick={() => setAddingMember(true)}>
             <span className="material-symbols-outlined text-[20px]">person_add</span>
-            Add Member
+            Add Editor
           </button>
         )}
       </header>
@@ -389,11 +387,10 @@ export default function AdminTeamPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
             {[
               { label: 'Total members', value: stats.total, icon: 'groups' },
               { label: 'Editors', value: stats.editors, icon: 'movie_edit' },
-              { label: 'Cameramen', value: stats.cameramen, icon: 'videocam' },
               { label: 'Admins', value: stats.admins, icon: 'admin_panel_settings' },
             ].map((stat) => (
               <div key={stat.label} className="mf-stat-card">
@@ -410,7 +407,6 @@ export default function AdminTeamPage() {
             {[
               { id: 'all', label: 'All' },
               { id: 'editor', label: 'Editors' },
-              { id: 'photographer', label: 'Cameramen' },
               { id: 'admin', label: 'Admins' },
             ].map((tab) => (
               <button
@@ -451,7 +447,7 @@ export default function AdminTeamPage() {
 
       {addingMember && (
         <MemberFormModal
-          title="Add Team Member"
+          title="Add Editor"
           onClose={() => {
             setAddingMember(false);
             setModalError('');
@@ -464,7 +460,7 @@ export default function AdminTeamPage() {
 
       {editingMember && (
         <MemberFormModal
-          title="Edit Team Member"
+          title="Edit Editor"
           initial={editingMember}
           onClose={() => {
             setEditingMember(null);
@@ -487,7 +483,7 @@ export default function AdminTeamPage() {
           <div className="relative z-10 w-full max-w-md mf-card p-6">
             <div className="mb-4 flex items-center gap-3">
               <span className="material-symbols-outlined text-[28px] text-error">warning</span>
-              <h2 className="mf-text-card-title">Remove team member?</h2>
+              <h2 className="mf-text-card-title">Remove editor?</h2>
             </div>
             <p className="mf-text-body">
               Remove <span className="font-semibold text-on-surface">{removingMember.name}</span> from the

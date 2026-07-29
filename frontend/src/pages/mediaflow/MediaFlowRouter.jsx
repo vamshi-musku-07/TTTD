@@ -7,10 +7,10 @@ import AdminDashboardPage from './AdminDashboardPage';
 import EditorDashboardPage from './EditorDashboardPage';
 import ComplaintsPage from './ComplaintsPage';
 import AdminTeamPage from './AdminTeamPage';
-import ComingSoonPage from './ComingSoonPage';
+import SettingsPage from './SettingsPage';
 
 export default function MediaFlowRouter() {
-  const { isEditor, isAdmin, isPhotographer, role } = useRole();
+  const { isEditor, isAdmin, role } = useRole();
   const { pathname } = useLocation();
   const { eventId } = useParams();
 
@@ -19,6 +19,7 @@ export default function MediaFlowRouter() {
   const isEventDetail = Boolean(eventId);
   const isComplaints = pathname.endsWith('/complaints');
   const isTeam = pathname.endsWith('/team');
+  const isSettings = pathname.endsWith('/settings');
 
   if (isTeam && !isAdmin) {
     return <Navigate to={getDefaultAppRoute(role)} replace />;
@@ -40,6 +41,10 @@ export default function MediaFlowRouter() {
     return <ComplaintsPage />;
   }
 
+  if (isSettings) {
+    return <SettingsPage />;
+  }
+
   if (isEventDetail) {
     return <EventDetailPage />;
   }
@@ -48,9 +53,5 @@ export default function MediaFlowRouter() {
     return <EventsPage />;
   }
 
-  if (isPhotographer && isDashboard) {
-    return <Navigate to="/app/events" replace />;
-  }
-
-  return <ComingSoonPage />;
+  return <Navigate to={getDefaultAppRoute(role)} replace />;
 }

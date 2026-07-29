@@ -51,12 +51,14 @@ export function KreativeAuthShell({ heading, subheading, footerText, footerLinkT
               <p className="mt-1.5 text-sm text-gray-400">{subheading}</p>
             </div>
             {children}
-            <p className="text-center text-sm text-gray-400">
-              {footerText}{' '}
-              <Link to={footerTo} className="font-semibold text-neutral-950 no-underline hover:underline">
-                {footerLinkText}
-              </Link>
-            </p>
+            {footerText && footerTo && footerLinkText && (
+              <p className="text-center text-sm text-gray-400">
+                {footerText}{' '}
+                <Link to={footerTo} className="font-semibold text-neutral-950 no-underline hover:underline">
+                  {footerLinkText}
+                </Link>
+              </p>
+            )}
           </div>
         </div>
       </div>

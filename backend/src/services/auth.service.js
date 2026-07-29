@@ -108,43 +108,29 @@ async function verifyGoogleCredential(credential) {
   };
 }
 
-async function registerOrLoginGoogle(credential, acceptTerms) {
+async function registerOrLoginGoogle(credential) {
   const profile = await verifyGoogleCredential(credential);
 
   let user = await User.findOne({
     $or: [{ googleId: profile.googleId }, { email: profile.email }],
   }).select('+refreshTokenHash');
 
-  if (user) {
-    if (!user.googleId) {
-      user.googleId = profile.googleId;
-      user.authProvider = user.password ? 'local' : 'google';
-    }
-    if (profile.avatar) user.avatar = profile.avatar;
-    user.isEmailVerified = true;
-    user.lastLoginAt = new Date();
-    user.failedLoginAttempts = 0;
-    user.lockUntil = undefined;
-    await user.save({ validateBeforeSave: false });
-  } else {
-    if (!acceptTerms) {
-      const err = new Error('You must accept the terms and privacy policy');
-      err.status = 400;
-      throw err;
-    }
-
-    user = await User.create({
-      email: profile.email,
-      firstName: profile.firstName,
-      lastName: profile.lastName || 'User',
-      avatar: profile.avatar,
-      googleId: profile.googleId,
-      authProvider: 'google',
-      isEmailVerified: true,
-      acceptedTermsAt: new Date(),
-      lastLoginAt: new Date(),
-    });
+  if (!user) {
+    const err = new Error('No account found. Ask an admin to create your editor account first.');
+    err.status = 403;
+    throw err;
   }
+
+  if (!user.googleId) {
+    user.googleId = profile.googleId;
+    user.authProvider = user.password ? 'local' : 'google';
+  }
+  if (profile.avatar && !user.avatar) user.avatar = profile.avatar;
+  user.isEmailVerified = true;
+  user.lastLoginAt = new Date();
+  user.failedLoginAttempts = 0;
+  user.lockUntil = undefined;
+  await user.save({ validateBeforeSave: false });
 
   const tokens = issueTokens(user);
   await persistRefreshToken(user, tokens.refreshToken);
@@ -269,6 +255,40 @@ async function getMe(userId) {
   return sanitizeUser(user);
 }
 
+async function updateProfile(userId, data) {
+  const user = await User.findById(userId).select('+password');
+  if (!user) {
+    const err = new Error('User not found');
+    err.status = 404;
+    throw err;
+  }
+
+  if (data.name) {
+    const { splitName } = require('./team.service');
+    const { firstName, lastName } = splitName(data.name);
+    user.firstName = firstName;
+    user.lastName = lastName;
+  }
+
+  if (data.avatar !== undefined) {
+    const { normalizeAvatar } = require('./team.service');
+    user.avatar = normalizeAvatar(data.avatar);
+  }
+
+  if (data.password) {
+    const passwordCheck = validatePasswordStrength(data.password);
+    if (!passwordCheck.valid) {
+      const err = new Error(`Password requirements: ${passwordCheck.failures.join(', ')}`);
+      err.status = 400;
+      throw err;
+    }
+    user.password = data.password;
+  }
+
+  await user.save();
+  return sanitizeUser(user);
+}
+
 module.exports = {
   registerLocal,
   registerOrLoginGoogle,
@@ -278,4 +298,5 @@ module.exports = {
   refreshSession,
   logout,
   getMe,
+  updateProfile,
 };

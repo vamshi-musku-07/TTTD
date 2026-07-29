@@ -14,11 +14,6 @@ const ADMIN_NAV = [
   { to: '/app/events', label: 'Events', icon: 'calendar_month' },
   { to: '/app/team', label: 'Team', icon: 'group' },
   { to: '/app/complaints', label: 'Complaints', icon: 'report_problem' },
-];
-
-const PHOTOGRAPHER_NAV = [
-  { to: '/app/events', label: 'Events', icon: 'calendar_month' },
-  { to: '/app/complaints', label: 'Complaints', icon: 'report_problem' },
   { to: '/app/settings', label: 'Settings', icon: 'settings' },
 ];
 
@@ -64,10 +59,10 @@ function RailLink({ to, label, icon, railCompact, onNavigate }) {
 }
 
 export function FloatingSidebar({ onLogout }) {
-  const { isAdmin, isPhotographer } = useRole();
+  const { isAdmin } = useRole();
   const { sidebarCollapsed, mobileNavOpen, toggleSidebar, closeMobileNav } = useTheme();
 
-  const navItems = isAdmin ? ADMIN_NAV : isPhotographer ? PHOTOGRAPHER_NAV : EDITOR_NAV;
+  const navItems = isAdmin ? ADMIN_NAV : EDITOR_NAV;
   const railCompact = sidebarCollapsed && !mobileNavOpen;
   const railExpanded = !railCompact;
 
@@ -147,9 +142,7 @@ export function useRailBreadcrumb() {
     dashboard: 'Dashboard',
     events: 'Events',
     complaints: 'Complaints',
-    support: 'Support',
     settings: 'Settings',
-    footage: 'Footage',
     team: 'Team',
   };
   return map[segment] || 'Portal';

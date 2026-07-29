@@ -4,7 +4,6 @@ import { AuthProvider } from './context/AuthContext';
 import { RoleProvider } from './context/RoleContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { GuestRoute, ProtectedRoute, AppHomeRedirect } from './components/RouteGuards';
-import SignupPage from './pages/SignupPage';
 import LoginPage from './pages/LoginPage';
 import VerifyEmailPage from './pages/VerifyEmailPage';
 import VerifyEmailPendingPage from './pages/VerifyEmailPendingPage';
@@ -26,10 +25,9 @@ function AppShell() {
 function AppRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/signup" replace />} />
+      <Route path="/" element={<Navigate to="/login" replace />} />
 
       <Route element={<GuestRoute />}>
-        <Route path="/signup" element={<SignupPage />} />
         <Route path="/login" element={<LoginPage />} />
       </Route>
 
@@ -37,21 +35,19 @@ function AppRoutes() {
       <Route path="/verify-email-pending" element={<VerifyEmailPendingPage />} />
 
       <Route element={<ProtectedRoute />}>
-        <Route path="/dashboard" element={<Navigate to="/app/events" replace />} />
+        <Route path="/dashboard" element={<Navigate to="/app/dashboard" replace />} />
         <Route path="/app" element={<AppShell />}>
           <Route index element={<AppHomeRedirect />} />
           <Route path="dashboard" element={<MediaFlowRouter />} />
           <Route path="events" element={<MediaFlowRouter />} />
           <Route path="events/:eventId" element={<MediaFlowRouter />} />
           <Route path="complaints" element={<MediaFlowRouter />} />
-          <Route path="footage" element={<MediaFlowRouter />} />
           <Route path="team" element={<MediaFlowRouter />} />
-          <Route path="support" element={<MediaFlowRouter />} />
           <Route path="settings" element={<MediaFlowRouter />} />
         </Route>
       </Route>
 
-      <Route path="*" element={<Navigate to="/signup" replace />} />
+      <Route path="*" element={<Navigate to="/login" replace />} />
     </Routes>
   );
 }

@@ -63,7 +63,7 @@ async function notifyComplaintSubmitted(complaint) {
       ? `${submitter.firstName} ${submitter.lastName}`.trim()
       : 'A team member';
 
-  const roleLabel = complaint.submitterRole === 'photographer' ? 'Cameraman' : 'Editor';
+  const roleLabel = 'Editor';
   const assignedId = complaint.assignedTo?._id?.toString() || complaint.assignedTo?.toString();
 
   const superAdmins = await User.find({ role: 'super_admin' }).select('_id');

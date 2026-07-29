@@ -1,6 +1,6 @@
 const API_URL = import.meta.env.VITE_API_URL || '/api';
 
-const AUTH_SKIP_RETRY_PATHS = ['/auth/login', '/auth/signup', '/auth/google', '/auth/refresh'];
+const AUTH_SKIP_RETRY_PATHS = ['/auth/login', '/auth/google', '/auth/refresh'];
 
 class ApiError extends Error {
   constructor(message, status, errors) {
@@ -69,11 +69,15 @@ async function request(path, options = {}) {
   const { token, activeRole, _retried, ...fetchOptions } = options;
 
   const authToken = token ?? authHandlers.getToken?.() ?? null;
+  const isFormData = typeof FormData !== 'undefined' && fetchOptions.body instanceof FormData;
 
   const headers = {
-    'Content-Type': 'application/json',
     ...fetchOptions.headers,
   };
+
+  if (!isFormData && !headers['Content-Type']) {
+    headers['Content-Type'] = 'application/json';
+  }
 
   if (authToken) {
     headers.Authorization = `Bearer ${authToken}`;
@@ -119,9 +123,6 @@ async function request(path, options = {}) {
 }
 
 export const api = {
-  signup: (body) =>
-    request('/auth/signup', { method: 'POST', body: JSON.stringify(body) }),
-
   login: (body) =>
     request('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
 
@@ -134,6 +135,15 @@ export const api = {
     request('/auth/logout', { method: 'POST', token }),
 
   me: (token) => request('/auth/me', { token }),
+
+  updateProfile: (body, token) =>
+    request('/auth/me', { method: 'PATCH', body: JSON.stringify(body), token }),
+
+  uploadAvatar: (file, token) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    return request('/uploads/avatar', { method: 'POST', body: formData, token });
+  },
 
   verifyEmail: (token) =>
     request(`/auth/verify-email?token=${encodeURIComponent(token)}`),

@@ -13,7 +13,7 @@ const CATEGORY_STYLES = {
 function getComplaintActiveRole(user) {
   if (user?.role === 'super_admin') return 'super_admin';
   if (user?.role === 'admin') return 'admin';
-  if (user?.role === 'photographer') return 'photographer';
+  if (user?.role === 'editor') return 'editor';
   return 'editor';
 }
 
@@ -117,9 +117,9 @@ function ComplaintCard({ complaint, isAdmin, onResolve, resolving }) {
 
 export default function ComplaintsPage() {
   const { accessToken, user } = useAuth();
-  const { isAdmin, isPhotographer, isEditor } = useRole();
+  const { isAdmin, isEditor } = useRole();
   const activeRole = getComplaintActiveRole(user);
-  const canSubmit = !isAdmin && (isEditor || isPhotographer);
+  const canSubmit = !isAdmin && isEditor;
 
   const [complaints, setComplaints] = useState([]);
   const [recipients, setRecipients] = useState([]);
@@ -191,7 +191,7 @@ export default function ComplaintsPage() {
           description: description.trim(),
           ...(isOtherCategory ? { otherDetails: otherDetails.trim() } : {}),
           assignedToId,
-          submitterRole: isPhotographer ? 'photographer' : 'editor',
+          submitterRole: 'editor',
         },
         accessToken
       );

@@ -26,6 +26,9 @@ function validateProductionEnv() {
     'JWT_REFRESH_SECRET',
     'GOOGLE_CLIENT_ID',
     'CLIENT_URL',
+    'CLOUDINARY_CLOUD_NAME',
+    'CLOUDINARY_API_KEY',
+    'CLOUDINARY_API_SECRET',
   ];
 
   const missing = required.filter((key) => !process.env[key]?.trim());
@@ -44,7 +47,15 @@ function validateProductionEnv() {
 }
 
 if (isDev) {
-  for (const key of ['MONGODB_URI', 'JWT_ACCESS_SECRET', 'JWT_REFRESH_SECRET', 'GOOGLE_CLIENT_ID']) {
+  for (const key of [
+    'MONGODB_URI',
+    'JWT_ACCESS_SECRET',
+    'JWT_REFRESH_SECRET',
+    'GOOGLE_CLIENT_ID',
+    'CLOUDINARY_CLOUD_NAME',
+    'CLOUDINARY_API_KEY',
+    'CLOUDINARY_API_SECRET',
+  ]) {
     if (!process.env[key]) {
       console.warn(`[env] Warning: ${key} is not set`);
     }
@@ -87,5 +98,11 @@ module.exports = {
     secure: process.env.COOKIE_SECURE ? process.env.COOKIE_SECURE === 'true' : isProd,
     sameSite: process.env.COOKIE_SAME_SITE || (isDev ? 'lax' : 'strict'),
     domain: process.env.COOKIE_DOMAIN || undefined,
+  },
+  cloudinary: {
+    cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+    apiKey: process.env.CLOUDINARY_API_KEY,
+    apiSecret: process.env.CLOUDINARY_API_SECRET,
+    folder: process.env.CLOUDINARY_FOLDER || 'mediaflow',
   },
 };

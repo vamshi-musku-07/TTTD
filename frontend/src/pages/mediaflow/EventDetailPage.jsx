@@ -50,6 +50,7 @@ function VideoRow({ video, onEdit, onDelete }) {
         <div className="flex items-center gap-2 pl-4 border-l border-outline-variant">
           <NameAvatar
             name={video.uploadedByName}
+            avatar={video.uploadedByAvatar}
             className="flex w-8 h-8 rounded-lg bg-on-surface text-surface-container-lowest items-center justify-center text-[10px] font-bold border-0 shadow-none"
             title={video.uploadedByName}
           />

@@ -28,18 +28,10 @@ function StatusBadge({ meta }) {
 }
 
 function AdminStatusCell({ event }) {
-  const cameramanMeta = getCameramanStatusMeta(event.cameramanStatus);
   const editorMeta = getEditorStatusMeta(event.editorStatus);
 
   return (
     <div className="flex min-w-[190px] flex-col gap-2.5">
-      <div>
-        <p className="mb-1 flex items-center gap-1 mf-text-label-caps text-[9px] text-on-surface-variant">
-          <span className="material-symbols-outlined text-[13px]">videocam</span>
-          Cameraman
-        </p>
-        <StatusBadge meta={cameramanMeta} />
-      </div>
       <div>
         <p className="mb-1 flex items-center gap-1 mf-text-label-caps text-[9px] text-on-surface-variant">
           <span className="material-symbols-outlined text-[13px]">movie_edit</span>
@@ -282,51 +274,17 @@ function CreateEventModal({ open, onClose, onCreated, accessToken, isAdmin }) {
 
 export default function EventsPage() {
   const navigate = useNavigate();
-  const { accessToken, user } = useAuth();
-  const { role, isAdmin, isPhotographer } = useRole();
+  const { accessToken } = useAuth();
+  const { role, isAdmin } = useRole();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
   const [showModal, setShowModal] = useState(false);
 
-  const userDisplayName = useMemo(
-    () => user?.fullName?.trim() || `${user?.firstName || ''} ${user?.lastName || ''}`.trim(),
-    [user]
-  );
-
-  const cameramanEvents = useMemo(() => {
-    if (!isPhotographer) return [];
-    return events.filter((event) => {
-      const isAssigned =
-        userDisplayName &&
-        event.cameraman &&
-        event.cameraman !== 'Unassigned' &&
-        event.cameraman === userDisplayName;
-      const isCreated = user?.id && event.createdBy?.id === user.id;
-      return isAssigned || isCreated;
-    });
-  }, [events, isPhotographer, userDisplayName, user?.id]);
-
   const newEventsCount = useMemo(() => events.filter((event) => event.isNew).length, [events]);
 
-  const stats = useMemo(() => {
-    if (isPhotographer) {
-      return [
-        { label: 'Total events', value: String(cameramanEvents.length), accent: false },
-        {
-          label: 'Cancelled events',
-          value: String(cameramanEvents.filter((e) => e.cameramanStatus === 'cancelled').length),
-          accent: false,
-        },
-        {
-          label: 'Event Done',
-          value: String(cameramanEvents.filter((e) => e.cameramanStatus === 'delivered').length),
-          accent: false,
-        },
-      ];
-    }
-
-    return [
+  const stats = useMemo(
+    () => [
       { label: 'Total events', value: String(events.length), accent: false },
       { label: 'Live now', value: String(events.filter((e) => e.live).length), accent: true },
       { label: 'New events', value: String(newEventsCount), accent: false },
@@ -335,8 +293,9 @@ export default function EventsPage() {
         value: String(events.filter((e) => e.editorStatus === 'event-done').length),
         accent: false,
       },
-    ];
-  }, [events, newEventsCount, isPhotographer, cameramanEvents]);
+    ],
+    [events, newEventsCount]
+  );
 
   const columns = isAdmin
     ? ['Event title', 'Schedule date', 'Location', 'Status', '']
@@ -426,7 +385,7 @@ export default function EventsPage() {
         isAdmin={isAdmin}
       />
 
-      <div className={`grid grid-cols-1 sm:grid-cols-2 gap-5 mb-6 ${isPhotographer ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
         {stats.map((stat) => (
           <div key={stat.label} className="mf-stat-card">
             <p className="mf-text-label-caps mb-2">{stat.label}</p>
@@ -513,12 +472,6 @@ export default function EventsPage() {
                             )}
                           </div>
                           <p className="mf-text-meta mt-0.5">{event.subtitle}</p>
-                          {isAdmin && (
-                            <p className="mf-text-meta mt-0.5 flex items-center gap-1">
-                              <span className="material-symbols-outlined text-[12px]">person</span>
-                              {event.cameraman}
-                            </p>
-                          )}
                         </div>
                       </div>
                     </td>
@@ -540,7 +493,7 @@ export default function EventsPage() {
                             role={role}
                             event={event}
                             onStatusChange={handleStatusChange}
-                            showShotDone={isPhotographer}
+                            showShotDone={false}
                           />
                         </div>
                       )}

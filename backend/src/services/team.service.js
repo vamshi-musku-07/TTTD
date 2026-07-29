@@ -3,11 +3,10 @@ const Event = require('../models/Event');
 const Video = require('../models/Video');
 const { validatePasswordStrength } = require('../utils/password');
 
-const TEAM_ROLES = ['editor', 'photographer', 'admin'];
+const TEAM_LIST_ROLES = ['editor', 'admin'];
 
 const ROLE_TITLES = {
   editor: 'Editor',
-  photographer: 'Cameraman',
   admin: 'Admin',
 };
 
@@ -34,20 +33,21 @@ function formatJoinedAt(date) {
   return new Date(date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 }
 
+function normalizeAvatar(avatar) {
+  if (avatar === undefined) return undefined;
+  if (avatar === null || avatar === '') return null;
+  return avatar;
+}
+
 async function buildMemberStats(user) {
-  const displayName = formatDisplayName(user.firstName, user.lastName);
   const videos = await Video.find({ uploadedBy: user._id });
   const videosUploaded = videos.length;
   const eventsEdited = new Set(videos.map((video) => video.event.toString())).size;
-  const eventsCovered = displayName
-    ? await Event.countDocuments({ cameraman: displayName })
-    : 0;
   const eventsManaged = user.role === 'admin' ? await Event.countDocuments() : 0;
 
   return {
     videosUploaded,
     eventsEdited,
-    eventsCovered,
     eventsManaged,
   };
 }
@@ -71,7 +71,7 @@ async function formatTeamMember(user) {
 }
 
 async function listTeamMembers() {
-  const users = await User.find({ role: { $in: TEAM_ROLES } }).sort({ createdAt: -1 });
+  const users = await User.find({ role: { $in: TEAM_LIST_ROLES } }).sort({ createdAt: -1 });
   return Promise.all(users.map(formatTeamMember));
 }
 
@@ -91,13 +91,15 @@ async function createTeamMember(data) {
   }
 
   const { firstName, lastName } = splitName(data.name);
+  const avatar = normalizeAvatar(data.avatar);
 
   const user = await User.create({
     email: data.email.toLowerCase(),
     password: data.password,
     firstName,
     lastName,
-    role: data.role,
+    role: 'editor',
+    avatar: avatar === undefined ? null : avatar,
     isEmailVerified: true,
     acceptedTermsAt: new Date(),
   });
@@ -105,16 +107,10 @@ async function createTeamMember(data) {
   return formatTeamMember(user);
 }
 
-async function updateTeamMember(userId, data, requesterId) {
+async function updateTeamMember(userId, data) {
   const user = await User.findById(userId);
-  if (!user || user.role === 'super_admin') {
-    const err = new Error('Team member not found');
-    err.status = 404;
-    throw err;
-  }
-
-  if (!TEAM_ROLES.includes(user.role)) {
-    const err = new Error('Team member not found');
+  if (!user || user.role !== 'editor') {
+    const err = new Error('Editor not found');
     err.status = 404;
     throw err;
   }
@@ -134,7 +130,10 @@ async function updateTeamMember(userId, data, requesterId) {
     user.firstName = firstName;
     user.lastName = lastName;
   }
-  if (data.role) user.role = data.role;
+
+  if (data.avatar !== undefined) {
+    user.avatar = normalizeAvatar(data.avatar);
+  }
 
   if (data.password) {
     const passwordCheck = validatePasswordStrength(data.password);
@@ -158,8 +157,8 @@ async function deleteTeamMember(userId, requesterId) {
   }
 
   const user = await User.findById(userId);
-  if (!user || !TEAM_ROLES.includes(user.role)) {
-    const err = new Error('Team member not found');
+  if (!user || user.role !== 'editor') {
+    const err = new Error('Editor not found');
     err.status = 404;
     throw err;
   }
@@ -173,4 +172,7 @@ module.exports = {
   createTeamMember,
   updateTeamMember,
   deleteTeamMember,
+  splitName,
+  formatDisplayName,
+  normalizeAvatar,
 };

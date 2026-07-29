@@ -11,6 +11,7 @@ const complaintsRoutes = require('./routes/complaints.routes');
 const dashboardRoutes = require('./routes/dashboard.routes');
 const teamRoutes = require('./routes/team.routes');
 const notificationsRoutes = require('./routes/notifications.routes');
+const uploadsRoutes = require('./routes/uploads.routes');
 const { errorHandler } = require('./middleware/errorHandler');
 
 const app = express();
@@ -38,7 +39,7 @@ app.use(
   })
 );
 
-app.use(express.json({ limit: '10kb' }));
+app.use(express.json({ limit: '100kb' }));
 app.use(cookieParser());
 
 app.get('/api/health', (_req, res) => {
@@ -52,6 +53,7 @@ app.use('/api/complaints', complaintsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/team', teamRoutes);
 app.use('/api/notifications', notificationsRoutes);
+app.use('/api/uploads', uploadsRoutes);
 
 if (serveFrontend) {
   const distPath =

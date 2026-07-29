@@ -3,13 +3,12 @@ const User = require('../models/User');
 const { notifyComplaintSubmitted } = require('./notifications.service');
 
 const ADMIN_ROLES = ['admin', 'super_admin'];
-const SUBMITTER_ROLES = ['editor', 'photographer'];
+const SUBMITTER_ROLES = ['editor'];
 
 const ROLE_LABELS = {
   admin: 'Admin',
   super_admin: 'Super Admin',
   editor: 'Editor',
-  photographer: 'Cameraman',
 };
 
 function generateTicketId() {

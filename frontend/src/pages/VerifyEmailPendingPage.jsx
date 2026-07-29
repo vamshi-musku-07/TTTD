@@ -54,7 +54,7 @@ export default function VerifyEmailPendingPage() {
         )}
 
         <p className="text-center text-[13px] text-[#52525b]">
-          Wrong address? <AuthLink to="/signup">Try again</AuthLink>
+          Wrong address? <AuthLink to="/login">Back to login</AuthLink>
         </p>
       </div>
     </AuthLayout>

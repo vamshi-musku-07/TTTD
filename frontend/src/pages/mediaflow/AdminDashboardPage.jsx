@@ -19,6 +19,7 @@ function ComplaintPreviewCard({ complaint, onResolve, resolving }) {
         <div className="flex min-w-0 items-center gap-3">
           <NameAvatar
             name={complaint.name}
+            avatar={complaint.avatar}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary"
             title={complaint.name}
           />

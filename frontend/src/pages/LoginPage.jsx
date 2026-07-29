@@ -47,7 +47,7 @@ export default function LoginPage() {
     setServerError('');
     setGoogleLoading(true);
     try {
-      const result = await googleAuth(response.credential, true);
+      const result = await googleAuth(response.credential);
       navigate(getDefaultAppRoute(result.user?.role));
     } catch (err) {
       setServerError(
@@ -61,10 +61,7 @@ export default function LoginPage() {
   return (
     <KreativeAuthShell
       heading="Welcome Back!"
-      subheading="Enter Your Details Below"
-      footerText="Don't have an account?"
-      footerLinkText="Sign Up"
-      footerTo="/signup"
+      subheading="Enter your details to sign in"
     >
       {serverError && <AuthAlert>{serverError}</AuthAlert>}
 

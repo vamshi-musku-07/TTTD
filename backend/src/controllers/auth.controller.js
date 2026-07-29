@@ -21,8 +21,8 @@ async function signup(req, res, next) {
 
 async function googleAuth(req, res, next) {
   try {
-    const { credential, acceptTerms } = req.validated;
-    const result = await authService.registerOrLoginGoogle(credential, acceptTerms ?? true);
+    const { credential } = req.validated;
+    const result = await authService.registerOrLoginGoogle(credential);
     sendAuthResponse(res, 200, result);
   } catch (err) {
     next(err);
@@ -70,6 +70,15 @@ async function me(req, res, next) {
   }
 }
 
+async function updateProfile(req, res, next) {
+  try {
+    const user = await authService.updateProfile(req.userId, req.validated);
+    res.json({ success: true, user });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function verifyEmail(req, res, next) {
   try {
     const token = req.body.token || req.query.token;
@@ -102,6 +111,7 @@ module.exports = {
   refresh,
   logout,
   me,
+  updateProfile,
   verifyEmail,
   resendVerification,
 };

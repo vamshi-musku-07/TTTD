@@ -88,15 +88,6 @@ export function AuthProvider({ children }) {
     return () => clearInterval(interval);
   }, [user, accessToken, persistSession, clearSession]);
 
-  const signup = useCallback(
-    async (payload) => {
-      const data = await api.signup(payload);
-      persistSession(data);
-      return data;
-    },
-    [persistSession]
-  );
-
   const login = useCallback(
     async (payload) => {
       const data = await api.login(payload);
@@ -107,8 +98,8 @@ export function AuthProvider({ children }) {
   );
 
   const googleAuth = useCallback(
-    async (credential, acceptTerms = true) => {
-      const data = await api.googleAuth({ credential, acceptTerms });
+    async (credential) => {
+      const data = await api.googleAuth({ credential });
       persistSession(data);
       return data;
     },
@@ -123,18 +114,22 @@ export function AuthProvider({ children }) {
     }
   }, [accessToken, clearSession]);
 
+  const updateUser = useCallback((nextUser) => {
+    setUser(nextUser);
+  }, []);
+
   const value = useMemo(
     () => ({
       user,
       accessToken,
       loading,
       isAuthenticated: !!user,
-      signup,
       login,
       googleAuth,
       logout,
+      updateUser,
     }),
-    [user, accessToken, loading, signup, login, googleAuth, logout]
+    [user, accessToken, loading, login, googleAuth, logout, updateUser]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

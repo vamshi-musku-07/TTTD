@@ -22,7 +22,6 @@ export function RoleProvider({ children }) {
       isEditor: role === 'editor',
       isAdmin,
       isSuperAdmin,
-      isPhotographer: role === 'photographer',
     };
   }, [role]);
 

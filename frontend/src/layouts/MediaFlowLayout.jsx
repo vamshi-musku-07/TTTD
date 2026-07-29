@@ -83,7 +83,12 @@ export default function MediaFlowLayout() {
                 <p className="mf-text-user-name">{displayName}</p>
                 <p className="mf-text-meta mt-0.5">{roleInfo.title}</p>
               </div>
-              <NameAvatar name={displayName} className="mf-avatar-letter" title={displayName} />
+              <NameAvatar
+                name={displayName}
+                avatar={user?.avatar}
+                className="mf-avatar-letter"
+                title={displayName}
+              />
             </div>
           </div>
         </header>

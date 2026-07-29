@@ -75,6 +75,7 @@ function formatVideo(video, currentUserId) {
     editor: uploaderName,
     uploadedBy: uploaderId,
     uploadedByName: uploaderName,
+    uploadedByAvatar: uploader?.avatar || null,
     canEdit: currentUserId ? uploaderId === currentUserId : false,
     createdAt: obj.createdAt,
   };
@@ -202,7 +203,7 @@ async function listVideosForEvent(eventId, currentUserId) {
   }
 
   const videos = await Video.find({ event: eventId })
-    .populate('uploadedBy', 'firstName lastName fullName')
+    .populate('uploadedBy', 'firstName lastName fullName avatar')
     .sort({ createdAt: -1 });
 
   return videos.map((v) => formatVideo(v, currentUserId));
@@ -230,12 +231,12 @@ async function createVideo(eventId, data, userId) {
     uploadedBy: userId,
   });
 
-  await video.populate('uploadedBy', 'firstName lastName fullName');
+  await video.populate('uploadedBy', 'firstName lastName fullName avatar');
   return formatVideo(video, userId);
 }
 
 async function updateVideo(videoId, data, userId) {
-  const video = await Video.findById(videoId).populate('uploadedBy', 'firstName lastName fullName');
+  const video = await Video.findById(videoId).populate('uploadedBy', 'firstName lastName fullName avatar');
   if (!video) {
     const err = new Error('Video not found');
     err.status = 404;

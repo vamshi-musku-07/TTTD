@@ -7,7 +7,6 @@ const ADMIN_ROLES = ['admin', 'super_admin'];
 
 const ROLE_LABELS = {
   editor: 'Editor',
-  photographer: 'Cameraman',
 };
 
 function formatRelativeTime(date) {

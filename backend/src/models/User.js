@@ -31,6 +31,7 @@ const userSchema = new mongoose.Schema(
     avatar: {
       type: String,
       default: null,
+      maxlength: 500,
     },
     authProvider: {
       type: String,
