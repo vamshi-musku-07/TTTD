@@ -335,7 +335,13 @@ export default function AdminTeamPage() {
       setEditingMember(null);
     } catch (err) {
       if (isSessionExpiredError(err)) return;
-      setModalError(err instanceof ApiError ? err.message : 'Failed to update editor');
+      const message =
+        err instanceof ApiError
+          ? err.message
+          : err?.message?.includes('Failed to fetch')
+            ? 'Cannot reach API. Check CORS / CLIENT_URL and that the backend is running.'
+            : 'Failed to update editor';
+      setModalError(message);
     } finally {
       setSaving(false);
     }

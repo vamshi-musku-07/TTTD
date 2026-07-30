@@ -13,7 +13,7 @@ function parseClientUrls() {
   const raw = process.env.CLIENT_URL || 'http://localhost:5173';
   return raw
     .split(',')
-    .map((url) => url.trim())
+    .map((url) => url.trim().replace(/\/$/, ''))
     .filter(Boolean);
 }
 

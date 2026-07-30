@@ -145,7 +145,21 @@ async function updateTeamMember(userId, data) {
     user.password = data.password;
   }
 
-  await user.save();
+  try {
+    await user.save();
+  } catch (saveErr) {
+    if (saveErr.name === 'ValidationError') {
+      const err = new Error(
+        Object.values(saveErr.errors || {})
+          .map((e) => e.message)
+          .join(', ') || 'Validation failed'
+      );
+      err.status = 400;
+      throw err;
+    }
+    throw saveErr;
+  }
+
   return formatTeamMember(user);
 }
 

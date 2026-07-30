@@ -27,10 +27,16 @@ app.use(
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || clientUrls.includes(origin)) {
+      if (!origin) {
         callback(null, true);
         return;
       }
+      const normalized = origin.replace(/\/$/, '');
+      if (clientUrls.includes(normalized)) {
+        callback(null, true);
+        return;
+      }
+      console.warn(`[cors] Blocked origin: ${origin}`);
       callback(null, false);
     },
     credentials: true,
