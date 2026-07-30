@@ -2,6 +2,22 @@ const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 const AUTH_SKIP_RETRY_PATHS = ['/auth/login', '/auth/google', '/auth/refresh'];
 
+/** Only these endpoints need the httpOnly refresh cookie. */
+const COOKIE_AUTH_PATHS = ['/auth/login', '/auth/google', '/auth/refresh', '/auth/logout'];
+
+function needsAuthCookies(path) {
+  return COOKIE_AUTH_PATHS.some((authPath) => path.startsWith(authPath));
+}
+
+/**
+ * Brave Shields often blocks cross-site credentialed fetches.
+ * Use cookies only where required; Bearer-token calls stay same-origin / omit cookies.
+ */
+function getCredentialsMode(path) {
+  if (!needsAuthCookies(path)) return 'same-origin';
+  return 'include';
+}
+
 class ApiError extends Error {
   constructor(message, status, errors) {
     super(message);
@@ -41,7 +57,7 @@ async function refreshAccessToken() {
     try {
       const response = await fetch(`${API_URL}/auth/refresh`, {
         method: 'POST',
-        credentials: 'include',
+        credentials: getCredentialsMode('/auth/refresh'),
         headers: { 'Content-Type': 'application/json' },
       });
 
@@ -90,7 +106,7 @@ async function request(path, options = {}) {
   const response = await fetch(`${API_URL}${path}`, {
     ...fetchOptions,
     headers,
-    credentials: 'include',
+    credentials: getCredentialsMode(path),
   });
 
   let data = null;
