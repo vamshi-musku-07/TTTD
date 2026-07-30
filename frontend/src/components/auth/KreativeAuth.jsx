@@ -35,7 +35,7 @@ function AuthLogo() {
 
 export function KreativeAuthShell({ heading, subheading, footerText, footerLinkText, footerTo, children }) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-[#e9e9ee] px-4  font-sans">
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#e9e9ee] px-4 py-4 font-sans">
 
 
       <div className="flex w-full max-w-7xl   overflow-hidden rounded-[48px] bg-white shadow-xl">
@@ -43,7 +43,7 @@ export function KreativeAuthShell({ heading, subheading, footerText, footerLinkT
           <AuthVisual />
         </div>
 
-        <div className="flex w-full shrink-0 flex-col items-center justify-center overflow-y-auto  md:w-1/2">
+        <div className="flex w-full shrink-0 flex-col items-center justify-center overflow-y-auto py-4  md:w-1/2">
           <div className="w-full px-15">
             <AuthLogo />
             <div className="mb-7 text-center">

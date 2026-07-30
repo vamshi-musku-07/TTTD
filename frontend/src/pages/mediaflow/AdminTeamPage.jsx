@@ -301,7 +301,6 @@ export default function AdminTeamPage() {
     () => ({
       total: team.length,
       editors: team.filter((m) => m.role === 'editor').length,
-      admins: team.filter((m) => m.role === 'admin').length,
     }),
     [team]
   );
@@ -387,11 +386,10 @@ export default function AdminTeamPage() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
+          <div className="grid grid-cols-2 gap-4">
             {[
               { label: 'Total members', value: stats.total, icon: 'groups' },
               { label: 'Editors', value: stats.editors, icon: 'movie_edit' },
-              { label: 'Admins', value: stats.admins, icon: 'admin_panel_settings' },
             ].map((stat) => (
               <div key={stat.label} className="mf-stat-card">
                 <div className="mb-2 flex items-center justify-between">
