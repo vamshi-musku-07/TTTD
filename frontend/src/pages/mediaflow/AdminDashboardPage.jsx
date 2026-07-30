@@ -180,12 +180,12 @@ export default function AdminDashboardPage() {
             ))}
           </div>
 
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-12">
-            <div className="lg:col-span-8">
+          <div className="grid min-w-0 grid-cols-1 gap-5 lg:grid-cols-12">
+            <div className="min-w-0 lg:col-span-8">
               <UploadFrequencyChart chartData={uploadChart} />
             </div>
 
-            <div className="flex flex-col gap-4 lg:col-span-4">
+            <div className="flex min-w-0 flex-col gap-4 lg:col-span-4">
               <div className="flex items-center justify-between">
                 <h3 className="mf-text-card-title text-base">Open Complaints</h3>
                 {metrics?.openComplaints > 0 && (

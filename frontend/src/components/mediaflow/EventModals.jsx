@@ -28,7 +28,7 @@ export function EventFormModal({ open, event, onClose, onSaved, accessToken }) {
   useEffect(() => {
     if (!open) return;
     setTitle(event?.title || '');
-    setDate(toDateInputValue(event?.scheduleDate));
+    setDate(toDateInputValue(event?.scheduleDate || new Date()));
     setLocation(event?.location || '');
     setEventType(event?.type || EVENT_TYPES[0]);
     setFieldErrors({});

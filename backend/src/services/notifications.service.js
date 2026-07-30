@@ -65,7 +65,12 @@ async function notifyComplaintSubmitted(complaint) {
   const submitter = complaint.submittedBy;
   const submitterName =
     submitter && typeof submitter === 'object'
-      ? `${submitter.firstName} ${submitter.lastName}`.trim()
+      ? (() => {
+          const first = String(submitter.firstName || '').trim();
+          const last = String(submitter.lastName || '').trim();
+          if (first && first === last) return first;
+          return `${first} ${last}`.trim() || 'A team member';
+        })()
       : 'A team member';
 
   const roleLabel = 'Editor';

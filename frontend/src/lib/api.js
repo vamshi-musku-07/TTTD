@@ -210,8 +210,13 @@ export const api = {
   deleteVideo: (videoId, token) =>
     request(`/videos/${videoId}`, { method: 'DELETE', token }),
 
-  getEditorDashboard: (token, { editorId } = {}) => {
-    const query = editorId ? `?editorId=${encodeURIComponent(editorId)}` : '';
+  getEditorDashboard: (token, { editorId, range, from, to } = {}) => {
+    const params = new URLSearchParams();
+    if (editorId) params.set('editorId', editorId);
+    if (range) params.set('range', range);
+    if (from) params.set('from', from);
+    if (to) params.set('to', to);
+    const query = params.toString() ? `?${params.toString()}` : '';
     return request(`/dashboard/editor${query}`, { token });
   },
 

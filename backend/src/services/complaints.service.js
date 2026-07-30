@@ -33,10 +33,20 @@ function formatComplaint(complaint) {
   const assignee = obj.assignedTo && typeof obj.assignedTo === 'object' ? obj.assignedTo : null;
 
   const submitterName = submitter
-    ? `${submitter.firstName} ${submitter.lastName}`.trim()
+    ? (() => {
+        const first = String(submitter.firstName || '').trim();
+        const last = String(submitter.lastName || '').trim();
+        if (first && first === last) return first;
+        return `${first} ${last}`.trim() || 'Unknown';
+      })()
     : 'Unknown';
   const assigneeName = assignee
-    ? `${assignee.firstName} ${assignee.lastName}`.trim()
+    ? (() => {
+        const first = String(assignee.firstName || '').trim();
+        const last = String(assignee.lastName || '').trim();
+        if (first && first === last) return first;
+        return `${first} ${last}`.trim() || 'Unknown';
+      })()
     : 'Unknown';
 
   return {
@@ -78,13 +88,18 @@ async function listRecipients() {
     .select('firstName lastName email role')
     .sort({ role: -1, firstName: 1 });
 
-  return admins.map((user) => ({
-    id: user._id.toString(),
-    name: `${user.firstName} ${user.lastName}`.trim(),
-    email: user.email,
-    role: user.role,
-    label: ROLE_LABELS[user.role] || user.role,
-  }));
+  return admins.map((user) => {
+    const first = String(user.firstName || '').trim();
+    const last = String(user.lastName || '').trim();
+    const name = first && first === last ? first : `${first} ${last}`.trim();
+    return {
+      id: user._id.toString(),
+      name,
+      email: user.email,
+      role: user.role,
+      label: ROLE_LABELS[user.role] || user.role,
+    };
+  });
 }
 
 function buildComplaintSubject(data) {
@@ -191,10 +206,16 @@ async function resolveComplaint(complaintId, userId, activeRole, replyMessage) {
   }
 
   const admin = await User.findById(userId);
+  const adminFirst = String(admin?.firstName || '').trim();
+  const adminLast = String(admin?.lastName || '').trim();
+  const adminName =
+    adminFirst && adminFirst === adminLast
+      ? adminFirst
+      : `${adminFirst} ${adminLast}`.trim();
   const authorLabel =
     activeRole === 'super_admin'
-      ? `Super Admin (${admin.firstName} ${admin.lastName})`
-      : `Admin (${admin.firstName} ${admin.lastName})`;
+      ? `Super Admin (${adminName})`
+      : `Admin (${adminName})`;
 
   complaint.status = 'resolved';
   complaint.resolvedAt = new Date();

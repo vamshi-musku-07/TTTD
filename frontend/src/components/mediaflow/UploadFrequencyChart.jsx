@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useTheme } from '../../context/ThemeContext';
 import { UPLOAD_PLATFORMS } from '../../lib/editorDashboardData';
 
@@ -94,7 +94,10 @@ function PlatformLogo({ platform, className = 'h-4 w-4', isDark = false }) {
   return null;
 }
 
-export default function UploadFrequencyChart({ chartData, subtitle = 'All editor uploads over the last 7 days' }) {
+export default function UploadFrequencyChart({
+  chartData = [],
+  subtitle = 'All editor uploads over the last 7 days',
+}) {
   const [mounted, setMounted] = useState(false);
   const { isDark } = useTheme();
 
@@ -107,6 +110,7 @@ export default function UploadFrequencyChart({ chartData, subtitle = 'All editor
   };
 
   useEffect(() => {
+    setMounted(false);
     const raf = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(raf);
   }, [chartData]);
@@ -114,86 +118,129 @@ export default function UploadFrequencyChart({ chartData, subtitle = 'All editor
   const stackOrder = ['youtubeShorts', 'youtubeLong', 'facebook', 'threads', 'instagram'];
   const hasData = chartData.some(
     (d) =>
-      d.counts.instagram +
-        d.counts.facebook +
-        d.counts.threads +
-        d.counts.youtubeLong +
-        d.counts.youtubeShorts >
+      (d.counts?.instagram || 0) +
+        (d.counts?.facebook || 0) +
+        (d.counts?.threads || 0) +
+        (d.counts?.youtubeLong || 0) +
+        (d.counts?.youtubeShorts || 0) >
       0
   );
 
+  const pointCount = chartData.length;
+  const needsScroll = pointCount > 10;
+
+  // Keep bars readable: fixed column width when scrolling, flexible when few days
+  const columnStyle = useMemo(() => {
+    if (!needsScroll) return undefined;
+    const width = pointCount > 20 ? 44 : 52;
+    return { width, minWidth: width, maxWidth: width };
+  }, [needsScroll, pointCount]);
+
   return (
-    <div className="mf-card flex h-[420px] flex-col p-6">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4 border-b border-outline-variant pb-4">
-        <div>
+    <div className="mf-card flex min-w-0 flex-col overflow-hidden p-4 sm:p-6">
+      <div className="mb-4 flex flex-col gap-4 border-b border-outline-variant pb-4 sm:mb-5">
+        <div className="min-w-0">
           <h3 className="mf-text-card-title">Upload Frequency</h3>
-          <p className="mf-text-meta mt-1">{subtitle}</p>
+          <p className="mf-text-meta mt-1 break-words">{subtitle}</p>
         </div>
-        <div className="flex flex-wrap gap-4">
+        <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-1 [scrollbar-width:thin]">
           {UPLOAD_PLATFORMS.map((p) => (
-            <div key={p.key} className="flex items-center gap-2">
-              <span className={`flex h-5 w-5 items-center justify-center rounded-md ${getPlatformClass(p.key, 'dot')}`}>
+            <div key={p.key} className="flex shrink-0 items-center gap-2">
+              <span
+                className={`flex h-5 w-5 items-center justify-center rounded-md ${getPlatformClass(p.key, 'dot')}`}
+              >
                 <PlatformLogo platform={p.key} className="h-3 w-3" isDark={isDark} />
               </span>
-              <span className="mf-text-body">{p.label}</span>
+              <span className="whitespace-nowrap text-xs text-on-surface-variant sm:text-sm">
+                {p.label}
+              </span>
             </div>
           ))}
         </div>
       </div>
 
       {!hasData ? (
-        <div className="flex flex-1 items-center justify-center mf-text-body">
-          No uploads yet. Videos uploaded by any editor will appear here.
+        <div className="flex min-h-[220px] flex-1 items-center justify-center px-2 py-10 text-center mf-text-body">
+          No uploads in this period. Try another range or editor.
         </div>
       ) : (
-        <div className="relative flex min-h-0 flex-1 items-end justify-between gap-5 pt-6 sm:gap-8">
-          <div className="pointer-events-none absolute inset-x-0 top-6 bottom-8 flex flex-col justify-between">
-            {[0, 1, 2, 3].map((line) => (
-              <div key={line} className="w-full border-b border-outline-variant/30" />
-            ))}
-          </div>
-
-          {chartData.map((item, dayIndex) => (
-            <div key={`${item.day}-${dayIndex}`} className="group relative z-10 flex flex-1 flex-col items-center gap-1">
-              <div className="flex h-64 w-full max-w-[72px] flex-col justify-end">
-                {stackOrder.map((key, segIndex) => {
-                  const value = item[key];
-                  const count = item.counts?.[key] ?? 0;
-                  const isTop = segIndex === 0;
-                  return (
-                    <div
-                      key={key}
-                      className={`relative flex w-full items-center justify-center overflow-hidden ${
-                        isTop ? 'rounded-t-md' : ''
-                      } ${getPlatformClass(key)}`}
-                      style={{
-                        height: mounted && count > 0 ? `${Math.max(value, 8)}%` : '0%',
-                        transition: 'height 700ms cubic-bezier(0.22, 1, 0.36, 1)',
-                        transitionDelay: `${dayIndex * 70 + (stackOrder.length - segIndex) * 60}ms`,
-                      }}
-                      title={`${PLATFORM_STYLES[key].label}: ${count}`}
-                    >
-                      {count > 0 && (
-                        <span
-                          className="drop-shadow-sm transition-opacity duration-500"
-                          style={{
-                            opacity: mounted ? 1 : 0,
-                            transitionDelay: `${dayIndex * 70 + 400}ms`,
-                          }}
-                        >
-                          <PlatformLogo platform={key} className="h-3.5 w-3.5" isDark={isDark} />
-                        </span>
-                      )}
-                    </div>
-                  );
-                })}
+        <div className="relative min-w-0">
+          {needsScroll && (
+            <p className="mb-2 text-[11px] text-on-surface-variant sm:hidden">
+              Swipe sideways to see all days
+            </p>
+          )}
+          <div
+            className={`-mx-1 overflow-x-auto px-1 pb-2 [scrollbar-width:thin] ${
+              needsScroll ? 'snap-x snap-mandatory' : ''
+            }`}
+          >
+            <div
+              className={`relative flex h-[280px] items-end gap-2 pt-4 sm:h-[320px] sm:gap-3 ${
+                needsScroll ? 'w-max min-w-full' : 'w-full justify-between'
+              }`}
+            >
+              <div className="pointer-events-none absolute inset-x-0 top-4 bottom-10 flex flex-col justify-between">
+                {[0, 1, 2, 3].map((line) => (
+                  <div key={line} className="w-full border-b border-outline-variant/30" />
+                ))}
               </div>
-              <span className="mf-text-label-caps shrink-0 text-[10px]">{item.day}</span>
-              {item.counts?.total > 0 && (
-                <span className="mf-text-meta text-[9px]">{item.counts.total} uploads</span>
-              )}
+
+              {chartData.map((item, dayIndex) => (
+                <div
+                  key={`${item.day}-${dayIndex}`}
+                  className={`group relative z-10 flex flex-col items-center gap-1 ${
+                    needsScroll ? 'snap-start' : 'min-w-0 flex-1'
+                  }`}
+                  style={columnStyle}
+                >
+                  <div
+                    className={`flex h-[200px] flex-col justify-end sm:h-[240px] ${
+                      needsScroll ? 'w-9 sm:w-10' : 'w-full max-w-[56px]'
+                    }`}
+                  >
+                    {stackOrder.map((key, segIndex) => {
+                      const value = item[key] || 0;
+                      const count = item.counts?.[key] ?? 0;
+                      const isTop = segIndex === 0;
+                      return (
+                        <div
+                          key={key}
+                          className={`relative flex w-full items-center justify-center overflow-hidden ${
+                            isTop ? 'rounded-t-md' : ''
+                          } ${getPlatformClass(key)}`}
+                          style={{
+                            height: mounted && count > 0 ? `${Math.max(value, 8)}%` : '0%',
+                            transition: 'height 700ms cubic-bezier(0.22, 1, 0.36, 1)',
+                            transitionDelay: `${Math.min(dayIndex, 12) * 40 + (stackOrder.length - segIndex) * 40}ms`,
+                          }}
+                          title={`${PLATFORM_STYLES[key].label}: ${count}`}
+                        >
+                          {count > 0 && value >= 18 && (
+                            <span
+                              className="drop-shadow-sm transition-opacity duration-500"
+                              style={{
+                                opacity: mounted ? 1 : 0,
+                                transitionDelay: `${Math.min(dayIndex, 12) * 40 + 280}ms`,
+                              }}
+                            >
+                              <PlatformLogo platform={key} className="h-3 w-3" isDark={isDark} />
+                            </span>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <span className="mt-1 max-w-full truncate text-center text-[9px] font-semibold uppercase tracking-wide text-on-surface-variant sm:text-[10px]">
+                    {item.day}
+                  </span>
+                  {item.counts?.total > 0 && (
+                    <span className="text-[9px] text-on-surface-variant">{item.counts.total}</span>
+                  )}
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       )}
     </div>

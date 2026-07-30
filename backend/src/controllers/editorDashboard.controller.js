@@ -6,6 +6,9 @@ async function getEditorDashboard(req, res, next) {
       userId: req.userId,
       role: req.user?.role || 'editor',
       editorId: req.query.editorId,
+      range: req.query.range,
+      from: req.query.from,
+      to: req.query.to,
     });
     res.json({ success: true, ...data });
   } catch (err) {
