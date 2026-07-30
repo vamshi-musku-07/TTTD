@@ -238,7 +238,7 @@ export default function ComplaintsPage() {
         </h1>
         <p className="mf-text-body mt-2 text-[16px]">
           {isAdmin
-            ? 'Review and resolve complaints submitted by editors and cameramen across MediaFlow.'
+            ? 'Review and resolve complaints submitted by editors and cameramen across Tea Time Telugu.'
             : 'Submit feedback or report issues and send them directly to an admin or super admin.'}
         </p>
       </div>

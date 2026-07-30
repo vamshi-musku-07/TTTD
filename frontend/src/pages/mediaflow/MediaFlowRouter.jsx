@@ -15,6 +15,7 @@ export default function MediaFlowRouter() {
   const { eventId } = useParams();
 
   const isDashboard = pathname.endsWith('/dashboard');
+  const isEditorProgress = pathname.endsWith('/editor-progress');
   const isEventsList = !eventId && pathname.endsWith('/events');
   const isEventDetail = Boolean(eventId);
   const isComplaints = pathname.endsWith('/complaints');
@@ -25,8 +26,16 @@ export default function MediaFlowRouter() {
     return <Navigate to={getDefaultAppRoute(role)} replace />;
   }
 
+  if (isEditorProgress && !isAdmin) {
+    return <Navigate to={getDefaultAppRoute(role)} replace />;
+  }
+
   if (isAdmin && isDashboard) {
     return <AdminDashboardPage />;
+  }
+
+  if (isAdmin && isEditorProgress) {
+    return <EditorDashboardPage />;
   }
 
   if (isAdmin && isTeam) {

@@ -37,6 +37,7 @@ const updateTeamMemberSchema = z.object({
 
 const updateProfileSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(100).optional(),
+  email: z.string().trim().email('Valid email is required').optional(),
   password: optionalPasswordSchema,
   avatar: avatarSchema,
 });

@@ -10,9 +10,16 @@ const EVENT_TYPES = [
 const createEventSchema = z.object({
   title: z.string().trim().min(1, 'Event title is required').max(200),
   scheduleDate: z.string().min(1, 'Date is required'),
-  location: z.string().trim().min(1, 'Location is required').max(200),
+  location: z.string().trim().max(200).optional().default(''),
   type: z.enum(EVENT_TYPES, { errorMap: () => ({ message: 'Invalid event type' }) }),
   cameraman: z.string().trim().max(100).optional(),
+});
+
+const updateEventSchema = z.object({
+  title: z.string().trim().min(1, 'Event title is required').max(200),
+  scheduleDate: z.string().min(1, 'Date is required'),
+  location: z.string().trim().max(200).optional().default(''),
+  type: z.enum(EVENT_TYPES, { errorMap: () => ({ message: 'Invalid event type' }) }),
 });
 
 const updateEventStatusSchema = z
@@ -58,6 +65,7 @@ const updateVideoSchema = z.object({
 
 module.exports = {
   createEventSchema,
+  updateEventSchema,
   updateEventStatusSchema,
   createVideoSchema,
   updateVideoSchema,

@@ -338,6 +338,8 @@
   color: #fff;
   margin: 0;
   flex-shrink: 0;
+  overflow: hidden;
+  background: #fff;
 }
 
 .mf-rail-logo-row {
@@ -354,12 +356,13 @@
 .mf-rail-brand {
   overflow: hidden;
   white-space: nowrap;
-  font-size: 15px;
+  font-size: 13px;
   font-weight: 700;
   color: #fff;
   letter-spacing: -0.02em;
   opacity: 1;
-  max-width: 140px;
+  max-width: 160px;
+  line-height: 1.2;
   transition: opacity 0.2s ease, max-width 0.25s ease;
 }
 

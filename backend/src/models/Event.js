@@ -7,12 +7,11 @@ const eventSchema = new mongoose.Schema(
     subtitle: { type: String, trim: true, default: '' },
     image: {
       type: String,
-      default:
-        'https://images.unsplash.com/photo-1540575861501-7cf05a4b125a?q=80&w=800&auto=format&fit=crop',
+      default: '/tea-time-telugu-logo.png',
     },
     scheduleDate: { type: Date, required: true },
     time: { type: String, trim: true, default: 'TBD' },
-    location: { type: String, required: true, trim: true, maxlength: 200 },
+    location: { type: String, trim: true, maxlength: 200, default: '' },
     type: { type: String, required: true, trim: true },
     cameraman: { type: String, trim: true, default: 'Unassigned' },
     live: { type: Boolean, default: false },

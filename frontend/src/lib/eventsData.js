@@ -19,8 +19,7 @@ export const EVENTS = [
     slug: 'tech-summit-2024',
     title: 'Tech Summit 2024',
     subtitle: 'Global Keynote Series',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuA9EiobPBW5YcYurwa7nU3k-rkJLEnqbpClsAFMoWiTqAwXt4lW_G14V8ToYuAAXdSRQPrJLEriIl-BR_9h0mwlloKfk2RnDVN6P1T2bvkzn_LZ4eNmgu0WTuxGscDXPc2zzivE8Lg1WcNV8-s8vhjI8V9U4lNQjxya_FUabcdmChAJZzkTv1Ap7IfJ-Y-Sfd3Eh_j4LxlXsf6d70YnblwrRy--8qj_THUjxm6KOP-gIciFM3Fj22RSo8BNVomBEPpUv96iSi-puA',
+    image: '/tea-time-telugu-logo.png',
     date: 'Oct 12, 2024',
     time: '09:00 AM EST',
     location: 'San Francisco, CA',
@@ -36,8 +35,7 @@ export const EVENTS = [
     slug: 'luxury-brand-launch',
     title: 'Luxury Brand Launch',
     subtitle: 'Seasonal Collection',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuC-rNejgm_jXxYM9ScZhQk811hohwWt-mOsJBo7lAlZvFisoXHFu1sYIEi2w-4_79nrw-yPDoBPIOZHfSkPTYyNTwdjzlmXkDYhfhhVgZBgQfn3MZB79HR6eTqp-7xcilllGdW_2k26JjkSxWAfEc1qqbbCFj4EPNJYqREhyXT4ObDKxktfYi0VtRHZQPqMZIwGuADbhPs8Zj1JV5keyWy8D_HpUK9_ZTxwVoN36NjwKYEPi8aVituNuL1Pj_svsE5XEnmnJLCKSw',
+    image: '/tea-time-telugu-logo.png',
     date: 'Nov 05, 2024',
     time: '07:30 PM CET',
     location: 'Paris, France',
@@ -53,8 +51,7 @@ export const EVENTS = [
     slug: 'global-media-expo',
     title: 'Global Media Expo',
     subtitle: 'Production Workflow Hub',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuAs2Q44zxkIIR7Hi9wNLu674gQDS_ob_2_r4PA7wodQRzYbuCDf1BJupTa9TFKCGvw04oU8vjt3fMTMwNzmCWHgBsIR0-ZWHtrFoAAKCX-__Wbg4qdznSwOweFRZhRdiov_PRbMXpldwIQO7v20qBzM2RVFdetGoF0D41OSDNlkWQ1GKf4jzVf5rUbRk9F-wpFpPj8rw9zizeQNHvm75K6lSWbRUwUHtHH9Jo7m60FELcG6GnqhMEaMWG-Uj7yi_Rxugy_qEC1VAQ',
+    image: '/tea-time-telugu-logo.png',
     date: 'Happening now',
     time: 'Started at 08:00 AM',
     location: 'New York, NY',
@@ -70,8 +67,7 @@ export const EVENTS = [
     slug: 'sustainability-forum',
     title: 'Sustainability Forum',
     subtitle: 'Panel Discussions',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuCbeAH40hH9tZpzXKZmubyKK1xGAYMppOcjA2VaiAoDSlqD01wenFnnFG-2rO4zOqgY7gFVv30ST4wuRsQNSTLSIwHniNHKSW5iDvEbcs735-mw3ZOTuPfpHZ5zLRjfP1VV3qFGRKOEIjCLq2Fy8HYChYhk4qzQl4rjDO946KDa4l8n53bbQ5GrkkD1eQrX6TPUW74FSztsZxTGIzJVPTaftDqjQLSoSz6KPN1U88rGqL2wFv1DWdbOUNOt3zIo20FOXldYXFbloA',
+    image: '/tea-time-telugu-logo.png',
     date: 'Dec 01, 2024',
     time: '10:00 AM GMT',
     location: 'London, UK',
@@ -89,8 +85,7 @@ export const RAW_VIDEO_TYPE = 'Raw';
 
 export const SOCIAL_PLATFORMS = ['Facebook', 'Instagram', 'YouTube', 'Threads'];
 
-const VIDEO_THUMB =
-  'https://images.unsplash.com/photo-1540575861501-7cf05a4b125a?q=80&w=800&auto=format&fit=crop';
+const VIDEO_THUMB = '/tea-time-telugu-logo.png';
 
 export const DEFAULT_VIDEOS = [
   { id: 'v1', title: 'Keynote Highlights - AI Integration', type: 'Shortform', slug: 'summit24_01', platforms: ['IG', 'YT'], editor: 'Editor 1' },

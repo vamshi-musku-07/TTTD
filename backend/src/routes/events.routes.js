@@ -3,6 +3,7 @@ const { authenticate } = require('../middleware/auth');
 const { validate } = require('../middleware/validate');
 const {
   createEventSchema,
+  updateEventSchema,
   updateEventStatusSchema,
   createVideoSchema,
   updateVideoSchema,
@@ -14,6 +15,8 @@ const router = Router();
 router.get('/', eventsController.listEvents);
 router.get('/:eventId', eventsController.getEvent);
 router.post('/', authenticate, validate(createEventSchema), eventsController.createEvent);
+router.patch('/:eventId', authenticate, validate(updateEventSchema), eventsController.updateEvent);
+router.delete('/:eventId', authenticate, eventsController.deleteEvent);
 router.patch(
   '/:eventId/status',
   authenticate,

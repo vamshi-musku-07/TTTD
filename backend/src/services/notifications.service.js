@@ -34,7 +34,12 @@ async function notifyEventCreated(event, creatorUserId) {
   const creator = event.createdBy;
   const creatorName =
     creator && typeof creator === 'object'
-      ? creator.fullName || `${creator.firstName} ${creator.lastName}`.trim()
+      ? (() => {
+          const first = String(creator.firstName || '').trim();
+          const last = String(creator.lastName || '').trim();
+          if (first && first === last) return first;
+          return `${first} ${last}`.trim() || 'Someone';
+        })()
       : 'Someone';
 
   const recipients = await User.find({ _id: { $ne: creatorUserId } }).select('_id');

@@ -25,7 +25,12 @@ function formatComplaintPreview(complaint) {
   const obj = complaint.toObject ? complaint.toObject() : complaint;
   const submitter = obj.submittedBy && typeof obj.submittedBy === 'object' ? obj.submittedBy : null;
   const submitterName = submitter
-    ? `${submitter.firstName} ${submitter.lastName}`.trim()
+    ? (() => {
+        const first = String(submitter.firstName || '').trim();
+        const last = String(submitter.lastName || '').trim();
+        if (first && first === last) return first;
+        return `${first} ${last}`.trim() || 'Unknown';
+      })()
     : 'Unknown';
 
   return {
@@ -67,6 +72,7 @@ async function getAdminDashboard(userId, activeRole) {
     metrics: {
       totalEvents,
       activeEvents,
+      totalVideosUploaded: allVideos.length,
       openComplaints: openComplaintsCount,
     },
     uploadChart: buildUploadChart(allVideos),

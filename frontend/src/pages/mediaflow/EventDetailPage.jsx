@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams, Navigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { useRole } from '../../context/RoleContext';
@@ -6,13 +6,14 @@ import { VIDEO_TYPES, RAW_VIDEO_TYPE, SOCIAL_PLATFORMS } from '../../lib/eventsD
 import { api, ApiError, isSessionExpiredError } from '../../lib/api';
 import { SocialPlatformIcons } from '../../components/mediaflow/SocialPlatformIcon';
 import { NameAvatar } from '../../components/NameAvatar';
+import { EventFormModal, DeleteEventDialog } from '../../components/mediaflow/EventModals';
 
 function VideoRow({ video, onEdit, onDelete }) {
   return (
     <div className="p-5 md:p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4 hover:bg-surface-container-low transition-colors group border-b border-outline-variant last:border-0">
       <div className="flex items-center gap-4 flex-1 min-w-0">
-        <div className="relative w-32 aspect-video bg-black rounded-xl overflow-hidden shrink-0 group-hover:ring-2 ring-on-surface ring-offset-2 ring-offset-surface-container-lowest transition-all">
-          <img src={video.thumbnail} alt="" className="w-full h-full object-cover" />
+        <div className="relative w-36 aspect-[16/10] bg-white rounded-xl overflow-hidden shrink-0 border border-outline-variant group-hover:ring-2 ring-on-surface ring-offset-2 ring-offset-surface-container-lowest transition-all">
+          <img src={video.thumbnail} alt="" className="w-full h-full object-contain p-1" />
           {video.videoUrl && (
             <div className="absolute inset-0 bg-black/30 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
               <span className="material-symbols-outlined text-white text-3xl">play_arrow</span>
@@ -458,8 +459,20 @@ export default function EventDetailPage() {
   const [deletingVideo, setDeletingVideo] = useState(null);
   const [saving, setSaving] = useState(false);
   const [uploadMode, setUploadMode] = useState('edited');
+  const [editEventOpen, setEditEventOpen] = useState(false);
+  const [deleteEventOpen, setDeleteEventOpen] = useState(false);
+  const [deletingEvent, setDeletingEvent] = useState(false);
 
-  const showRawOption = isEditor || isAdmin;
+  const canManageEvent = isEditor || isAdmin;
+  const showRawOption = canManageEvent;
+  const activeMode = showRawOption ? uploadMode : 'edited';
+
+  const visibleVideos = useMemo(() => {
+    if (activeMode === 'raw') {
+      return videos.filter((video) => video.type === RAW_VIDEO_TYPE);
+    }
+    return videos.filter((video) => video.type !== RAW_VIDEO_TYPE);
+  }, [videos, activeMode]);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -512,6 +525,25 @@ export default function EventDetailPage() {
     }
   };
 
+  const handleEventSaved = (updatedEvent) => {
+    setEvent(updatedEvent);
+  };
+
+  const handleConfirmDeleteEvent = async () => {
+    if (!event) return;
+    setDeletingEvent(true);
+    try {
+      await api.deleteEvent(event.id, accessToken);
+      navigate('/app/events', { replace: true });
+    } catch (err) {
+      if (isSessionExpiredError(err)) return;
+      setError(err instanceof ApiError ? err.message : 'Failed to delete event');
+      setDeleteEventOpen(false);
+    } finally {
+      setDeletingEvent(false);
+    }
+  };
+
   if (loading) {
     return <div className="mf-text-body py-12 text-center">Loading event...</div>;
   }
@@ -552,14 +584,53 @@ export default function EventDetailPage() {
             </div>
           </div>
         </div>
-        {showRawOption && <VideoModeToggle mode={uploadMode} onChange={setUploadMode} />}
+        <div className="flex flex-wrap items-center justify-end gap-2 shrink-0">
+          {canManageEvent && (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                className="mf-icon-btn border border-outline-variant"
+                aria-label="Edit event"
+                title="Edit event"
+                onClick={() => setEditEventOpen(true)}
+              >
+                <span className="material-symbols-outlined">edit</span>
+              </button>
+              <button
+                type="button"
+                className="mf-icon-btn border border-outline-variant hover:!bg-error/10 hover:!text-error"
+                aria-label="Delete event"
+                title="Delete event"
+                onClick={() => setDeleteEventOpen(true)}
+              >
+                <span className="material-symbols-outlined">delete</span>
+              </button>
+            </div>
+          )}
+          {showRawOption && <VideoModeToggle mode={uploadMode} onChange={setUploadMode} />}
+        </div>
       </div>
+
+      <EventFormModal
+        open={editEventOpen}
+        event={event}
+        onClose={() => setEditEventOpen(false)}
+        onSaved={handleEventSaved}
+        accessToken={accessToken}
+      />
+
+      <DeleteEventDialog
+        event={deleteEventOpen ? event : null}
+        onClose={() => !deletingEvent && setDeleteEventOpen(false)}
+        onConfirm={handleConfirmDeleteEvent}
+        deleting={deletingEvent}
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <div className="lg:col-span-4 xl:col-span-3">
           <VideoUploadPanel
             onAdd={handleAddVideo}
-            mode={showRawOption ? uploadMode : 'edited'}
+            mode={activeMode}
           />
         </div>
 
@@ -567,19 +638,27 @@ export default function EventDetailPage() {
           <div className="mf-card overflow-hidden">
             <div className="px-6 py-4 bg-surface-container-low border-b border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-2">
-                <span className="material-symbols-outlined text-on-surface">cloud_done</span>
-                <h2 className="mf-text-card-title">Uploaded Videos</h2>
+                <span className="material-symbols-outlined text-on-surface">
+                  {activeMode === 'raw' ? 'raw_on' : 'cloud_done'}
+                </span>
+                <h2 className="mf-text-card-title">
+                  {activeMode === 'raw' ? 'Raw Videos' : 'Uploaded Videos'}
+                </h2>
               </div>
-              <span className="mf-text-meta whitespace-nowrap">{videos.length} Videos</span>
+              <span className="mf-text-meta whitespace-nowrap">
+                {visibleVideos.length} {visibleVideos.length === 1 ? 'Video' : 'Videos'}
+              </span>
             </div>
 
-            {videos.length === 0 ? (
+            {visibleVideos.length === 0 ? (
               <div className="px-6 py-12 text-center mf-text-body">
-                No videos uploaded yet. Add the first video using the form.
+                {activeMode === 'raw'
+                  ? 'No raw videos yet. Add one using the form.'
+                  : 'No videos uploaded yet. Add the first video using the form.'}
               </div>
             ) : (
               <div>
-                {videos.map((video) => (
+                {visibleVideos.map((video) => (
                   <VideoRow
                     key={video.id}
                     video={video}

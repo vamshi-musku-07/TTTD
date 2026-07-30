@@ -11,8 +11,7 @@ const videoSchema = new mongoose.Schema(
     platforms: [{ type: String, trim: true }],
     thumbnail: {
       type: String,
-      default:
-        'https://images.unsplash.com/photo-1540575861501-7cf05a4b125a?q=80&w=800&auto=format&fit=crop',
+      default: '/tea-time-telugu-logo.png',
     },
     uploadedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   },

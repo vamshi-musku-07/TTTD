@@ -20,13 +20,14 @@ async function removeLegacySeedUsers() {
 async function seedSuperAdmin() {
   await removeLegacySeedUsers();
 
-  const existing = await User.findOne({ email: SUPER_ADMIN.email });
-  if (existing) {
-    existing.role = 'super_admin';
-    existing.password = SUPER_ADMIN.password;
-    existing.isEmailVerified = true;
-    await existing.save();
-    console.log('[seed] Ensured super admin account for vishnu@gmail.com');
+  // Never overwrite an existing super admin's email/password — they manage those in Settings.
+  const existingSuperAdmin = await User.findOne({ role: 'super_admin' });
+  if (existingSuperAdmin) {
+    if (!existingSuperAdmin.isEmailVerified) {
+      existingSuperAdmin.isEmailVerified = true;
+      await existingSuperAdmin.save();
+    }
+    console.log(`[seed] Super admin already exists (${existingSuperAdmin.email})`);
     return;
   }
 

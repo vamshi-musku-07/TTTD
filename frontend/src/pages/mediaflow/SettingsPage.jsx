@@ -77,13 +77,15 @@ function passwordStrength(password) {
 
 export default function SettingsPage() {
   const { user, accessToken, updateUser } = useAuth();
-  const { roleInfo } = useRole();
+  const { roleInfo, isSuperAdmin } = useRole();
   const fileInputRef = useRef(null);
 
   const initialName = formatDisplayName(user);
   const initialAvatar = user?.avatar || null;
+  const initialEmail = user?.email || '';
 
   const [name, setName] = useState(initialName);
+  const [email, setEmail] = useState(initialEmail);
   const [avatar, setAvatar] = useState(initialAvatar);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -97,6 +99,7 @@ export default function SettingsPage() {
 
   useEffect(() => {
     setName(formatDisplayName(user));
+    setEmail(user?.email || '');
     setAvatar(user?.avatar || null);
   }, [user]);
 
@@ -111,12 +114,14 @@ export default function SettingsPage() {
   const isDirty = useMemo(() => {
     const nameChanged = name.trim() !== (initialName || '').trim();
     const avatarChanged = (avatar || '') !== (initialAvatar || '');
+    const emailChanged = isSuperAdmin && email.trim().toLowerCase() !== (initialEmail || '').trim().toLowerCase();
     const passwordChanged = Boolean(password.trim());
-    return nameChanged || avatarChanged || passwordChanged;
-  }, [name, avatar, password, initialName, initialAvatar]);
+    return nameChanged || avatarChanged || emailChanged || passwordChanged;
+  }, [name, avatar, email, password, initialName, initialAvatar, initialEmail, isSuperAdmin]);
 
   const resetForm = () => {
     setName(formatDisplayName(user));
+    setEmail(user?.email || '');
     setAvatar(user?.avatar || null);
     setPassword('');
     setConfirmPassword('');
@@ -157,6 +162,13 @@ export default function SettingsPage() {
     e.preventDefault();
     const nextErrors = {};
     if (!name.trim()) nextErrors.name = 'Name is required';
+    if (isSuperAdmin) {
+      const trimmedEmail = email.trim();
+      if (!trimmedEmail) nextErrors.email = 'Email is required';
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
+        nextErrors.email = 'Enter a valid email address';
+      }
+    }
     if (password.trim()) {
       if (password.trim().length < 8) nextErrors.password = 'Password must be at least 8 characters';
       if (password !== confirmPassword) nextErrors.confirmPassword = 'Passwords do not match';
@@ -174,6 +186,7 @@ export default function SettingsPage() {
         name: name.trim(),
         avatar: avatar || '',
       };
+      if (isSuperAdmin) payload.email = email.trim().toLowerCase();
       if (password.trim()) payload.password = password.trim();
 
       const data = await api.updateProfile(payload, accessToken);
@@ -194,7 +207,7 @@ export default function SettingsPage() {
       <header className="mb-8">
         <h1 className="mf-text-display text-[32px] leading-tight">Settings</h1>
         <p className="mf-text-body mt-2 text-[16px]">
-          Manage how you appear across MediaFlow and keep your account secure.
+          Manage how you appear across Tea Time Telugu and keep your account secure.
         </p>
       </header>
 
@@ -239,7 +252,7 @@ export default function SettingsPage() {
 
             <div className="min-w-0 flex-1">
               <p className="text-lg font-semibold text-on-surface truncate">{name || 'Your name'}</p>
-              <p className="mf-text-meta mt-0.5 truncate">{user?.email}</p>
+              <p className="mf-text-meta mt-0.5 truncate">{isSuperAdmin ? email : user?.email}</p>
               <span className="mt-3 inline-flex rounded-full border border-outline-variant bg-surface-bright px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
                 {roleInfo.title}
               </span>
@@ -299,7 +312,11 @@ export default function SettingsPage() {
         <SectionCard
           icon="badge"
           title="Account"
-          description="These details are managed by your admin and can’t be edited here."
+          description={
+            isSuperAdmin
+              ? 'You can update your login email anytime. Role stays Super Admin.'
+              : 'These details are managed by your admin and can’t be edited here.'
+          }
         >
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
@@ -313,11 +330,23 @@ export default function SettingsPage() {
                 <input
                   id="settings-email"
                   type="email"
-                  value={user?.email || ''}
-                  className={`${fieldClass} pl-10`}
-                  disabled
+                  value={isSuperAdmin ? email : user?.email || ''}
+                  onChange={
+                    isSuperAdmin
+                      ? (e) => {
+                          setEmail(e.target.value);
+                          if (fieldError.email) setFieldError((prev) => ({ ...prev, email: '' }));
+                        }
+                      : undefined
+                  }
+                  className={`${fieldClass} pl-10 ${fieldError.email ? 'border-error' : ''}`}
+                  disabled={!isSuperAdmin}
+                  autoComplete="email"
                 />
               </div>
+              {fieldError.email && (
+                <p className="mt-1.5 text-xs text-error">{fieldError.email}</p>
+              )}
             </div>
             <div>
               <label htmlFor="settings-role" className="mb-1.5 block mf-text-label-caps">
@@ -342,7 +371,11 @@ export default function SettingsPage() {
         <SectionCard
           icon="lock"
           title="Security"
-          description="Leave blank to keep your current password."
+          description={
+            isSuperAdmin
+              ? 'Change your password whenever you want. Leave blank to keep the current one.'
+              : 'Leave blank to keep your current password.'
+          }
         >
           <div>
             <label htmlFor="settings-password" className="mb-1.5 block mf-text-label-caps">

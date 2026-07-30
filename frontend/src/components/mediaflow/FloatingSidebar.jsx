@@ -1,6 +1,7 @@
 import { NavLink, useLocation } from 'react-router-dom';
 import { useRole } from '../../context/RoleContext';
 import { useTheme } from '../../context/ThemeContext';
+import { BRAND_ICON_SRC, BRAND_NAME } from '../../lib/brand';
 
 const EDITOR_NAV = [
   { to: '/app/dashboard', label: 'Dashboard', icon: 'home' },
@@ -11,6 +12,7 @@ const EDITOR_NAV = [
 
 const ADMIN_NAV = [
   { to: '/app/dashboard', label: 'Dashboard', icon: 'dashboard' },
+  { to: '/app/editor-progress', label: 'Editor Progress', icon: 'monitoring' },
   { to: '/app/events', label: 'Events', icon: 'calendar_month' },
   { to: '/app/team', label: 'Team', icon: 'group' },
   { to: '/app/complaints', label: 'Complaints', icon: 'report_problem' },
@@ -75,12 +77,10 @@ export function FloatingSidebar({ onLogout }) {
       <div className="mf-rail-panel">
         <div className="mf-rail-logo-row">
           <div className="mf-rail-logo-wrap">
-            <div className="mf-rail-logo" aria-label="MediaFlow">
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path d="M12 3L21 19H3L12 3Z" stroke="currentColor" strokeWidth="1.75" strokeLinejoin="round" />
-              </svg>
+            <div className="mf-rail-logo" aria-label={BRAND_NAME}>
+              <img src={BRAND_ICON_SRC} alt="" className="h-[78%] w-[78%] object-contain" />
             </div>
-            {railExpanded && <span className="mf-rail-brand">MediaFlow</span>}
+            {railExpanded && <span className="mf-rail-brand">{BRAND_NAME}</span>}
           </div>
           <button
             type="button"
@@ -140,6 +140,7 @@ export function useRailBreadcrumb() {
   const segment = pathname.split('/').pop() || 'events';
   const map = {
     dashboard: 'Dashboard',
+    'editor-progress': 'Editor Progress',
     events: 'Events',
     complaints: 'Complaints',
     settings: 'Settings',

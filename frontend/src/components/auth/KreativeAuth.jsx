@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { GoogleLogin } from '@react-oauth/google';
+import { BRAND_ICON_SRC, BRAND_NAME } from '../../lib/brand';
 
 const inputBase =
   'w-full border-0 border-b bg-transparent text-[15px] text-neutral-950 outline-none transition-colors placeholder:text-[#c4c4c4] focus:border-neutral-950';
@@ -20,15 +21,14 @@ function AuthVisual() {
 
 function AuthLogo() {
   return (
-    <div className=" flex items-center justify-center gap-2.5">
-      <div
-        className="flex h-9 w-9 items-center justify-center gap-1.5 rounded-[10px] bg-neutral-950"
+    <div className="mb-1 flex items-center justify-center gap-2.5">
+      <img
+        src={BRAND_ICON_SRC}
+        alt=""
+        className="h-11 w-11 object-contain"
         aria-hidden="true"
-      >
-        <span className="h-[5px] w-[5px] rounded-full bg-white" />
-        <span className="h-[5px] w-[5px] rounded-full bg-white" />
-      </div>
-      <span className="text-[22px] font-bold tracking-tight text-neutral-950">MediaFlow</span>
+      />
+      <span className="text-[22px] font-bold tracking-tight text-neutral-950">{BRAND_NAME}</span>
     </div>
   );
 }

@@ -177,6 +177,12 @@ export const api = {
   createEvent: (body, token) =>
     request('/events', { method: 'POST', body: JSON.stringify(body), token }),
 
+  updateEvent: (eventId, body, token) =>
+    request(`/events/${eventId}`, { method: 'PATCH', body: JSON.stringify(body), token }),
+
+  deleteEvent: (eventId, token) =>
+    request(`/events/${eventId}`, { method: 'DELETE', token }),
+
   updateEventStatus: (eventId, body, token) =>
     request(`/events/${eventId}/status`, {
       method: 'PATCH',
@@ -204,7 +210,10 @@ export const api = {
   deleteVideo: (videoId, token) =>
     request(`/videos/${videoId}`, { method: 'DELETE', token }),
 
-  getEditorDashboard: (token) => request('/dashboard/editor', { token }),
+  getEditorDashboard: (token, { editorId } = {}) => {
+    const query = editorId ? `?editorId=${encodeURIComponent(editorId)}` : '';
+    return request(`/dashboard/editor${query}`, { token });
+  },
 
   getAdminDashboard: (token, activeRole) =>
     request('/dashboard/admin', { token, activeRole }),

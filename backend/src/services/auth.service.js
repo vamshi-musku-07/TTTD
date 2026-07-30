@@ -275,6 +275,26 @@ async function updateProfile(userId, data) {
     user.avatar = normalizeAvatar(data.avatar);
   }
 
+  if (data.email !== undefined) {
+    if (user.role !== 'super_admin') {
+      const err = new Error('Only the super admin can change email');
+      err.status = 403;
+      throw err;
+    }
+
+    const nextEmail = data.email.trim().toLowerCase();
+    if (nextEmail !== user.email) {
+      const duplicate = await User.findOne({ email: nextEmail, _id: { $ne: user._id } });
+      if (duplicate) {
+        const err = new Error('An account with this email already exists');
+        err.status = 409;
+        throw err;
+      }
+      user.email = nextEmail;
+      user.isEmailVerified = true;
+    }
+  }
+
   if (data.password) {
     const passwordCheck = validatePasswordStrength(data.password);
     if (!passwordCheck.valid) {

@@ -101,6 +101,14 @@ export default function AdminDashboardPage() {
         iconClass: 'text-amber-700 bg-amber-500/10',
       },
       {
+        label: 'Total videos uploaded',
+        value: String(metrics.totalVideosUploaded ?? 0),
+        sub: 'Videos uploaded by editors',
+        subClass: 'text-on-surface-variant',
+        icon: 'video_library',
+        iconClass: 'text-primary bg-primary/10',
+      },
+      {
         label: 'Open complaints',
         value: String(metrics.openComplaints),
         sub: metrics.openComplaints > 0 ? 'Awaiting admin review' : 'No open complaints',
@@ -148,7 +156,7 @@ export default function AdminDashboardPage() {
         </div>
       ) : (
         <>
-          <div className="mb-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="mb-6 grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-4">
             {metricCards.map((m) => (
               <div key={m.label} className="mf-stat-card flex flex-col">
                 <div className="mb-4 flex items-start justify-between">

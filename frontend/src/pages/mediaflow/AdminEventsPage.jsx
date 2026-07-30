@@ -41,7 +41,6 @@ export default function AdminEventsPage() {
     const errors = {};
     if (!title.trim()) errors.title = true;
     if (!date) errors.date = true;
-    if (!location.trim()) errors.location = true;
 
     setFieldErrors(errors);
     if (Object.keys(errors).length > 0 || submitState !== 'idle') return;
@@ -136,7 +135,7 @@ export default function AdminEventsPage() {
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
                 placeholder="London, UK"
-                className={`${fieldClass} pl-10 ${fieldErrors.location ? 'border-error' : ''}`}
+                className={`${fieldClass} pl-10`}
               />
             </div>
           </div>

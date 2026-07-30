@@ -9,10 +9,7 @@ import {
   getEditorStatusMeta,
   getCameramanStatusMeta,
 } from '../../lib/eventsData';
-import { CAMERAMEN, EVENT_TYPES } from '../../lib/adminEventsData';
-
-const fieldClass =
-  'w-full rounded-xl border border-outline-variant bg-surface-bright px-4 py-3 text-sm text-on-surface outline-none transition-colors focus:border-primary';
+import { EventFormModal, DeleteEventDialog } from '../../components/mediaflow/EventModals';
 
 const statusSelectClass =
   'rounded-lg border border-outline-variant bg-surface-bright px-3 py-2 text-xs font-semibold text-on-surface outline-none focus:border-primary min-w-[180px]';
@@ -85,193 +82,6 @@ function EventStatusSelect({ role, event, onStatusChange, showShotDone }) {
   );
 }
 
-function CreateEventModal({ open, onClose, onCreated, accessToken, isAdmin }) {
-  const [title, setTitle] = useState('');
-  const [date, setDate] = useState('');
-  const [location, setLocation] = useState('');
-  const [eventType, setEventType] = useState(EVENT_TYPES[0]);
-  const [cameraman, setCameraman] = useState(CAMERAMEN[0]);
-  const [fieldErrors, setFieldErrors] = useState({});
-  const [error, setError] = useState('');
-  const [submitState, setSubmitState] = useState('idle');
-
-  useEffect(() => {
-    if (!open) return;
-    setTitle('');
-    setDate('');
-    setLocation('');
-    setEventType(EVENT_TYPES[0]);
-    setCameraman(CAMERAMEN[0]);
-    setFieldErrors({});
-    setError('');
-    setSubmitState('idle');
-  }, [open]);
-
-  if (!open) return null;
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
-    const errors = {};
-    if (!title.trim()) errors.title = true;
-    if (!date) errors.date = true;
-    if (!location.trim()) errors.location = true;
-
-    setFieldErrors(errors);
-    setError('');
-    if (Object.keys(errors).length > 0 || submitState !== 'idle') return;
-
-    setSubmitState('submitting');
-
-    try {
-      const data = await api.createEvent(
-        {
-          title: title.trim(),
-          scheduleDate: date,
-          location: location.trim(),
-          type: eventType,
-          ...(isAdmin ? { cameraman } : {}),
-        },
-        accessToken
-      );
-      setSubmitState('success');
-      onCreated(data.event);
-      setTimeout(onClose, 800);
-    } catch (err) {
-      setSubmitState('idle');
-      if (isSessionExpiredError(err)) return;
-      setError(err instanceof ApiError ? err.message : 'Failed to create event');
-    }
-  };
-
-  const submitLabel =
-    submitState === 'submitting'
-      ? 'Creating...'
-      : submitState === 'success'
-        ? 'Created!'
-        : 'Create Event';
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-      <button type="button" className="absolute inset-0 bg-black/40" onClick={onClose} aria-label="Close" />
-      <div className="relative z-10 w-full max-w-2xl mf-card p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
-        <div className="mb-6 flex items-center justify-between gap-4 border-b border-outline-variant pb-4">
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-primary">add_circle</span>
-            <h2 className="mf-text-card-title">Create New Event</h2>
-          </div>
-          <button type="button" className="mf-icon-btn" onClick={onClose} aria-label="Close dialog">
-            <span className="material-symbols-outlined">close</span>
-          </button>
-        </div>
-
-        {error && (
-          <div className="mb-4 rounded-xl border border-error/30 bg-error/5 px-4 py-3 text-sm text-error">
-            {error}
-          </div>
-        )}
-
-        <form className="grid grid-cols-1 gap-4 sm:grid-cols-2" onSubmit={handleSubmit} noValidate>
-          <div className="sm:col-span-2">
-            <label htmlFor="modal-event-title" className="mb-1 block mf-text-label-caps">
-              Event Title
-            </label>
-            <input
-              id="modal-event-title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="e.g. Annual Tech Summit 2024"
-              className={`${fieldClass} ${fieldErrors.title ? 'border-error' : ''}`}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="modal-event-date" className="mb-1 block mf-text-label-caps">
-              Date
-            </label>
-            <input
-              id="modal-event-date"
-              type="date"
-              value={date}
-              onChange={(e) => setDate(e.target.value)}
-              className={`${fieldClass} ${fieldErrors.date ? 'border-error' : ''}`}
-            />
-          </div>
-
-          <div>
-            <label htmlFor="modal-event-location" className="mb-1 block mf-text-label-caps">
-              Location
-            </label>
-            <input
-              id="modal-event-location"
-              type="text"
-              value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="London, UK"
-              className={`${fieldClass} ${fieldErrors.location ? 'border-error' : ''}`}
-            />
-          </div>
-
-          <div className={isAdmin ? '' : 'sm:col-span-2'}>
-            <label htmlFor="modal-event-type" className="mb-1 block mf-text-label-caps">
-              Event Type
-            </label>
-            <select
-              id="modal-event-type"
-              value={eventType}
-              onChange={(e) => setEventType(e.target.value)}
-              className={fieldClass}
-            >
-              {EVENT_TYPES.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {isAdmin && (
-            <div>
-              <label htmlFor="modal-event-cameraman" className="mb-1 block mf-text-label-caps">
-                Assign Cameraman
-              </label>
-              <select
-                id="modal-event-cameraman"
-                value={cameraman}
-                onChange={(e) => setCameraman(e.target.value)}
-                className={fieldClass}
-              >
-                {CAMERAMEN.map((name) => (
-                  <option key={name} value={name}>
-                    {name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-
-          <div className="flex justify-end gap-3 sm:col-span-2 pt-2">
-            <button type="button" className="mf-btn-secondary" onClick={onClose}>
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={submitState === 'submitting'}
-              className={`mf-btn-primary gap-2 px-8 ${submitState === 'success' ? '!bg-green-600' : ''} ${
-                submitState === 'submitting' ? 'opacity-50' : ''
-              }`}
-            >
-              <span className="material-symbols-outlined text-sm">send</span>
-              {submitLabel}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
-  );
-}
-
 export default function EventsPage() {
   const navigate = useNavigate();
   const { accessToken } = useAuth();
@@ -279,7 +89,10 @@ export default function EventsPage() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
-  const [showModal, setShowModal] = useState(false);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState(null);
+  const [deletingEvent, setDeletingEvent] = useState(null);
+  const [deleting, setDeleting] = useState(false);
 
   const newEventsCount = useMemo(() => events.filter((event) => event.isNew).length, [events]);
 
@@ -297,9 +110,7 @@ export default function EventsPage() {
     [events, newEventsCount]
   );
 
-  const columns = isAdmin
-    ? ['Event title', 'Schedule date', 'Location', 'Status', '']
-    : ['Event title', 'Schedule date', 'Location', 'Status', ''];
+  const columns = ['Event title', 'Schedule date', 'Location', 'Status', 'Actions'];
 
   const fetchEvents = async () => {
     setLoading(true);
@@ -341,11 +152,46 @@ export default function EventsPage() {
     navigate(`/app/events/${event.id}`);
   };
 
-  const handleEventCreated = (event) => {
-    setEvents((prev) => [
-      event,
-      ...prev.map((e) => (e.isNew ? { ...e, isNew: false, badge: 'Active Event' } : e)),
-    ]);
+  const openCreateModal = () => {
+    setEditingEvent(null);
+    setModalOpen(true);
+  };
+
+  const openEditModal = (event) => {
+    setEditingEvent(event);
+    setModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditingEvent(null);
+  };
+
+  const handleEventSaved = (event, mode) => {
+    if (mode === 'created') {
+      setEvents((prev) => [
+        event,
+        ...prev.map((e) => (e.isNew ? { ...e, isNew: false, badge: 'Active Event' } : e)),
+      ]);
+      return;
+    }
+    setEvents((prev) => prev.map((e) => (e.id === event.id ? event : e)));
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!deletingEvent) return;
+    setDeleting(true);
+    try {
+      await api.deleteEvent(deletingEvent.id, accessToken);
+      setEvents((prev) => prev.filter((e) => e.id !== deletingEvent.id));
+      setDeletingEvent(null);
+    } catch (err) {
+      if (isSessionExpiredError(err)) return;
+      setLoadError(err instanceof ApiError ? err.message : 'Failed to delete event');
+      setDeletingEvent(null);
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
@@ -357,7 +203,7 @@ export default function EventsPage() {
             Review and manage upcoming production events and live broadcast schedules.
           </p>
         </div>
-        <button type="button" className="mf-btn-primary" onClick={() => setShowModal(true)}>
+        <button type="button" className="mf-btn-primary" onClick={openCreateModal}>
           <span className="material-symbols-outlined text-[20px]">add</span>
           Create Event
         </button>
@@ -377,12 +223,19 @@ export default function EventsPage() {
         </div>
       )}
 
-      <CreateEventModal
-        open={showModal}
-        onClose={() => setShowModal(false)}
-        onCreated={handleEventCreated}
+      <EventFormModal
+        open={modalOpen}
+        event={editingEvent}
+        onClose={closeModal}
+        onSaved={handleEventSaved}
         accessToken={accessToken}
-        isAdmin={isAdmin}
+      />
+
+      <DeleteEventDialog
+        event={deletingEvent}
+        onClose={() => !deleting && setDeletingEvent(null)}
+        onConfirm={handleConfirmDelete}
+        deleting={deleting}
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-6">
@@ -431,9 +284,9 @@ export default function EventsPage() {
                 <tr className="border-b border-outline-variant">
                   {columns.map((col) => (
                     <th
-                      key={col || 'actions'}
+                      key={col}
                       className={`px-6 py-4 mf-text-label-caps ${
-                        col.includes('Status') ? 'text-center' : col === '' ? 'text-right' : ''
+                        col.includes('Status') ? 'text-center' : col === 'Actions' ? 'text-right' : ''
                       }`}
                     >
                       {col}
@@ -457,8 +310,8 @@ export default function EventsPage() {
                   >
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl overflow-hidden relative shrink-0 bg-surface-container">
-                          <img className="w-full h-full object-cover" alt="" src={event.image} />
+                        <div className="w-28 h-16 rounded-xl overflow-hidden relative shrink-0 bg-white border border-outline-variant">
+                          <img className="w-full h-full object-contain p-1" alt="" src={event.image} />
                           {event.live && <div className="absolute inset-0 bg-error/20 animate-pulse" />}
                         </div>
                         <div>
@@ -482,7 +335,7 @@ export default function EventsPage() {
                       <p className="mf-text-meta mt-0.5">{event.time}</p>
                     </td>
                     <td className="px-6 py-4 text-sm text-on-surface">
-                      <p>{event.location}</p>
+                      <p>{event.location || '—'}</p>
                     </td>
                     <td className="px-6 py-4">
                       {isAdmin ? (
@@ -498,10 +351,40 @@ export default function EventsPage() {
                         </div>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-right">
-                      <span className="material-symbols-outlined text-on-surface-variant group-hover:text-on-surface transition-colors">
-                        chevron_right
-                      </span>
+                    <td className="px-6 py-4">
+                      <div
+                        className="flex items-center justify-end gap-1"
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          className="mf-icon-btn opacity-70 transition group-hover:opacity-100"
+                          aria-label={`Edit ${event.title}`}
+                          title="Edit event"
+                          onClick={() => openEditModal(event)}
+                        >
+                          <span className="material-symbols-outlined">edit</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="mf-icon-btn opacity-70 transition group-hover:opacity-100 hover:!bg-error/10 hover:!text-error"
+                          aria-label={`Delete ${event.title}`}
+                          title="Delete event"
+                          onClick={() => setDeletingEvent(event)}
+                        >
+                          <span className="material-symbols-outlined">delete</span>
+                        </button>
+                        <button
+                          type="button"
+                          className="mf-icon-btn opacity-70 transition group-hover:opacity-100"
+                          aria-label={`Open ${event.title}`}
+                          title="Open event"
+                          onClick={() => handleRowClick(event)}
+                        >
+                          <span className="material-symbols-outlined">chevron_right</span>
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))}

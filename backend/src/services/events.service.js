@@ -2,8 +2,25 @@ const Event = require('../models/Event');
 const Video = require('../models/Video');
 const { notifyEventCreated } = require('./notifications.service');
 
-const DEFAULT_IMAGE =
-  'https://images.unsplash.com/photo-1540575861501-7cf05a4b125a?q=80&w=800&auto=format&fit=crop';
+const LEGACY_DEFAULT_IMAGES = [
+  'https://images.unsplash.com/photo-1540575861501-7cf05a4b125a?q=80&w=800&auto=format&fit=crop',
+];
+
+const DEFAULT_IMAGE = '/tea-time-telugu-logo.png';
+
+function resolveMediaImage(image) {
+  if (!image || LEGACY_DEFAULT_IMAGES.includes(image)) return DEFAULT_IMAGE;
+  return image;
+}
+
+function formatPersonName(person) {
+  if (!person) return 'Unknown';
+  const first = String(person.firstName || '').trim();
+  const last = String(person.lastName || '').trim();
+  if (first && first === last) return first;
+  if (first && last) return `${first} ${last}`;
+  return first || last || 'Unknown';
+}
 
 function slugify(text) {
   return text
@@ -27,7 +44,7 @@ function formatEvent(event) {
   const createdBy = obj.createdBy && typeof obj.createdBy === 'object'
     ? {
         id: obj.createdBy._id?.toString(),
-        fullName: obj.createdBy.fullName || `${obj.createdBy.firstName} ${obj.createdBy.lastName}`.trim(),
+        fullName: formatPersonName(obj.createdBy),
       }
     : null;
 
@@ -36,7 +53,7 @@ function formatEvent(event) {
     slug: obj.slug,
     title: obj.title,
     subtitle: obj.subtitle || obj.type,
-    image: obj.image || DEFAULT_IMAGE,
+    image: resolveMediaImage(obj.image),
     date: formatDisplayDate(obj.scheduleDate),
     scheduleDate: obj.scheduleDate,
     time: obj.time || 'TBD',
@@ -59,10 +76,7 @@ function formatVideo(video, currentUserId) {
     ? obj.uploadedBy
     : null;
   const uploaderId = uploader?._id?.toString() || obj.uploadedBy?.toString();
-  const uploaderName = uploader
-    ? uploader.fullName || `${uploader.firstName} ${uploader.lastName}`.trim()
-    : 'Unknown';
-
+  const uploaderName = formatPersonName(uploader);
   return {
     id: obj._id.toString(),
     title: obj.title,
@@ -71,7 +85,7 @@ function formatVideo(video, currentUserId) {
     videoUrl: obj.videoUrl || '',
     description: obj.description || '',
     platforms: obj.platforms || [],
-    thumbnail: obj.thumbnail || DEFAULT_IMAGE,
+    thumbnail: resolveMediaImage(obj.thumbnail),
     editor: uploaderName,
     uploadedBy: uploaderId,
     uploadedByName: uploaderName,
@@ -159,7 +173,7 @@ async function createEvent(data, userId) {
     slug,
     subtitle: data.type,
     scheduleDate,
-    location: data.location.trim(),
+    location: (data.location || '').trim(),
     type: data.type,
     cameraman: data.cameraman || 'Unassigned',
     badge: 'New Event',
@@ -176,6 +190,52 @@ async function createEvent(data, userId) {
     // notifications should not block event creation
   }
   return formatEvent(event);
+}
+
+async function updateEvent(eventId, data) {
+  const event = await Event.findById(eventId);
+  if (!event) {
+    const err = new Error('Event not found');
+    err.status = 404;
+    throw err;
+  }
+
+  const nextTitle = data.title.trim();
+  const duplicate = await findDuplicateTitle(nextTitle, eventId);
+  if (duplicate) {
+    const err = new Error(`An event titled "${duplicate.title}" already exists`);
+    err.status = 409;
+    throw err;
+  }
+
+  const titleChanged = nextTitle !== event.title;
+  event.title = nextTitle;
+  event.subtitle = data.type;
+  event.type = data.type;
+  event.location = (data.location || '').trim();
+  event.scheduleDate = new Date(`${data.scheduleDate}T12:00:00`);
+
+  if (titleChanged) {
+    const baseSlug = slugify(nextTitle);
+    event.slug = await ensureUniqueSlug(baseSlug, eventId);
+  }
+
+  await event.save();
+  await event.populate('createdBy', 'firstName lastName fullName');
+  return formatEvent(event);
+}
+
+async function deleteEvent(eventId) {
+  const event = await Event.findById(eventId);
+  if (!event) {
+    const err = new Error('Event not found');
+    err.status = 404;
+    throw err;
+  }
+
+  await Video.deleteMany({ event: eventId });
+  await event.deleteOne();
+  return { success: true };
 }
 
 async function updateEventStatus(eventId, updates) {
@@ -281,6 +341,8 @@ module.exports = {
   listEvents,
   getEventById,
   createEvent,
+  updateEvent,
+  deleteEvent,
   updateEventStatus,
   listVideosForEvent,
   createVideo,

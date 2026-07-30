@@ -27,6 +27,24 @@ async function createEvent(req, res, next) {
   }
 }
 
+async function updateEvent(req, res, next) {
+  try {
+    const event = await eventsService.updateEvent(req.params.eventId, req.validated);
+    res.json({ success: true, event });
+  } catch (err) {
+    next(err);
+  }
+}
+
+async function deleteEvent(req, res, next) {
+  try {
+    await eventsService.deleteEvent(req.params.eventId);
+    res.json({ success: true, message: 'Event deleted' });
+  } catch (err) {
+    next(err);
+  }
+}
+
 async function updateEventStatus(req, res, next) {
   try {
     const event = await eventsService.updateEventStatus(req.params.eventId, req.validated);
@@ -76,6 +94,8 @@ module.exports = {
   listEvents,
   getEvent,
   createEvent,
+  updateEvent,
+  deleteEvent,
   updateEventStatus,
   listVideos,
   createVideo,

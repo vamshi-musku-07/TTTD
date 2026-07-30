@@ -39,6 +39,7 @@ function AppRoutes() {
         <Route path="/app" element={<AppShell />}>
           <Route index element={<AppHomeRedirect />} />
           <Route path="dashboard" element={<MediaFlowRouter />} />
+          <Route path="editor-progress" element={<MediaFlowRouter />} />
           <Route path="events" element={<MediaFlowRouter />} />
           <Route path="events/:eventId" element={<MediaFlowRouter />} />
           <Route path="complaints" element={<MediaFlowRouter />} />

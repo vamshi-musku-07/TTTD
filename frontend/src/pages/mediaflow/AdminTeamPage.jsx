@@ -369,8 +369,8 @@ export default function AdminTeamPage() {
           <h1 className="mf-text-display text-[32px] leading-tight">Team</h1>
           <p className="mf-text-body mt-2 text-[16px]">
             {canManage
-              ? 'Add and manage editors on MediaFlow.'
-              : 'View editors and admins across MediaFlow.'}
+              ? 'Add and manage editors on Tea Time Telugu.'
+              : 'View editors and admins across Tea Time Telugu.'}
           </p>
         </div>
         {canManage && (
@@ -491,7 +491,7 @@ export default function AdminTeamPage() {
             </div>
             <p className="mf-text-body">
               Remove <span className="font-semibold text-on-surface">{removingMember.name}</span> from the
-              MediaFlow team? This cannot be undone.
+              Tea Time Telugu team? This cannot be undone.
             </p>
             <div className="mt-6 flex justify-end gap-3">
               <button type="button" className="mf-btn-secondary" onClick={() => setRemovingMember(null)}>
