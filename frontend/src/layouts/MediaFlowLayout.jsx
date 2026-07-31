@@ -19,7 +19,6 @@ export default function MediaFlowLayout() {
 
   const hideGreeting =
     location.pathname.endsWith('/dashboard') ||
-    location.pathname.endsWith('/editor-progress') ||
     location.pathname.endsWith('/events') ||
     location.pathname.endsWith('/complaints') ||
     location.pathname.endsWith('/team') ||

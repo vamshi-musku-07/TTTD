@@ -26,16 +26,13 @@ export default function MediaFlowRouter() {
     return <Navigate to={getDefaultAppRoute(role)} replace />;
   }
 
-  if (isEditorProgress && !isAdmin) {
-    return <Navigate to={getDefaultAppRoute(role)} replace />;
+  // Editor Progress is now part of the admin Dashboard tab
+  if (isEditorProgress) {
+    return <Navigate to="/app/dashboard" replace />;
   }
 
   if (isAdmin && isDashboard) {
     return <AdminDashboardPage />;
-  }
-
-  if (isAdmin && isEditorProgress) {
-    return <EditorDashboardPage />;
   }
 
   if (isAdmin && isTeam) {

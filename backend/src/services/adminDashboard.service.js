@@ -56,7 +56,7 @@ function buildOpenComplaintsQuery(userId, activeRole) {
 async function getAdminDashboard(userId, activeRole) {
   const events = await Event.find();
   const totalEvents = events.length;
-  const activeEvents = events.filter((event) => event.cameramanStatus === 'started').length;
+  const activeEvents = events.filter((event) => event.editorStatus !== 'event-done').length;
 
   const complaintQuery = buildOpenComplaintsQuery(userId, activeRole);
   const [openComplaintsCount, openComplaintsPreview, allVideos] = await Promise.all([

@@ -1,7 +1,6 @@
 const Video = require('../models/Video');
 const User = require('../models/User');
 const {
-  buildUploadChart,
   buildUploadChartForRange,
   startOfDay,
   endOfDay,
@@ -180,15 +179,14 @@ function filterVideosByRange(videos, rangeWindow) {
 async function getEditorDashboard({ userId, role, editorId, range, from, to }) {
   const isAdmin = ADMIN_ROLES.includes(role);
   const allVideos = await Video.find().sort({ createdAt: -1 });
-  const rangeWindow = isAdmin
-    ? resolveDateRange(range, from, to)
-    : resolveDateRange('lifetime');
+  const rangeWindow = resolveDateRange(range, from, to);
 
   if (!isAdmin) {
     const userVideos = allVideos.filter((v) => v.uploadedBy.toString() === userId);
+    const rangedVideos = filterVideosByRange(userVideos, rangeWindow);
     return {
-      metrics: buildMetrics(userVideos, rangeWindow),
-      uploadChart: buildUploadChart(userVideos),
+      metrics: buildMetrics(rangedVideos, rangeWindow),
+      uploadChart: buildUploadChartForRange(rangedVideos, rangeWindow),
       selectedEditorId: userId,
       editors: null,
       viewMode: 'self',
@@ -223,14 +221,10 @@ async function getEditorDashboard({ userId, role, editorId, range, from, to }) {
   }
 
   const rangedVideos = filterVideosByRange(scopedVideos, rangeWindow);
-  const uploadChart =
-    rangeWindow.range === 'lifetime'
-      ? buildUploadChartForRange(rangedVideos, rangeWindow)
-      : buildUploadChartForRange(rangedVideos, rangeWindow);
 
   return {
     metrics: buildMetrics(rangedVideos, rangeWindow),
-    uploadChart,
+    uploadChart: buildUploadChartForRange(rangedVideos, rangeWindow),
     selectedEditorId,
     editors,
     viewMode,

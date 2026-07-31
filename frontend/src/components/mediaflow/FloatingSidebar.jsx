@@ -1,6 +1,9 @@
+import { useCallback, useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
 import { useRole } from '../../context/RoleContext';
 import { useTheme } from '../../context/ThemeContext';
+import { api, isSessionExpiredError } from '../../lib/api';
 import { BRAND_ICON_SRC, BRAND_NAME } from '../../lib/brand';
 
 const EDITOR_NAV = [
@@ -12,7 +15,6 @@ const EDITOR_NAV = [
 
 const ADMIN_NAV = [
   { to: '/app/dashboard', label: 'Dashboard', icon: 'dashboard' },
-  { to: '/app/editor-progress', label: 'Editor Progress', icon: 'monitoring' },
   { to: '/app/events', label: 'Events', icon: 'calendar_month' },
   { to: '/app/team', label: 'Team', icon: 'group' },
   { to: '/app/complaints', label: 'Complaints', icon: 'report_problem' },
@@ -30,15 +32,18 @@ function SidebarIcon({ name, active }) {
   );
 }
 
-function RailLink({ to, label, icon, railCompact, onNavigate }) {
+function RailLink({ to, label, icon, railCompact, onNavigate, badgeCount = 0 }) {
+  const showBadge = badgeCount > 0;
+  const badgeText = badgeCount > 99 ? '99+' : String(badgeCount);
+
   return (
     <li className="mf-rail-item">
       <NavLink
         to={to}
         end={to === '/app/dashboard'}
         className={({ isActive }) => `mf-rail-link ${isActive ? 'mf-rail-link--active' : ''}`}
-        aria-label={label}
-        title={railCompact ? label : undefined}
+        aria-label={showBadge ? `${label}, ${badgeCount} open` : label}
+        title={railCompact ? (showBadge ? `${label} (${badgeCount})` : label) : undefined}
         onClick={onNavigate}
       >
         {({ isActive }) => (
@@ -50,7 +55,14 @@ function RailLink({ to, label, icon, railCompact, onNavigate }) {
               </>
             )}
             <span className="mf-rail-link__inner">
-              <SidebarIcon name={icon} active={isActive} />
+              <span className="mf-rail-icon-wrap">
+                <SidebarIcon name={icon} active={isActive} />
+                {showBadge && (
+                  <span className="mf-rail-badge" aria-hidden="true">
+                    {badgeText}
+                  </span>
+                )}
+              </span>
               {!railCompact && <span className="mf-rail-label">{label}</span>}
             </span>
           </>
@@ -61,12 +73,33 @@ function RailLink({ to, label, icon, railCompact, onNavigate }) {
 }
 
 export function FloatingSidebar({ onLogout }) {
+  const { accessToken, user } = useAuth();
   const { isAdmin } = useRole();
   const { sidebarCollapsed, mobileNavOpen, toggleSidebar, closeMobileNav } = useTheme();
+  const { pathname } = useLocation();
+  const [openComplaintsCount, setOpenComplaintsCount] = useState(0);
 
   const navItems = isAdmin ? ADMIN_NAV : EDITOR_NAV;
   const railCompact = sidebarCollapsed && !mobileNavOpen;
   const railExpanded = !railCompact;
+
+  const loadOpenComplaintsCount = useCallback(async () => {
+    if (!isAdmin || !accessToken || !user) {
+      setOpenComplaintsCount(0);
+      return;
+    }
+    const activeRole = user.role === 'super_admin' ? 'super_admin' : 'admin';
+    try {
+      const data = await api.getAdminDashboard(accessToken, activeRole);
+      setOpenComplaintsCount(Number(data?.metrics?.openComplaints) || 0);
+    } catch (err) {
+      if (isSessionExpiredError(err)) return;
+    }
+  }, [accessToken, isAdmin, user]);
+
+  useEffect(() => {
+    loadOpenComplaintsCount();
+  }, [loadOpenComplaintsCount, pathname]);
 
   const handleNavClick = () => {
     if (mobileNavOpen) closeMobileNav();
@@ -111,6 +144,7 @@ export function FloatingSidebar({ onLogout }) {
                 {...item}
                 railCompact={railCompact}
                 onNavigate={handleNavClick}
+                badgeCount={item.to === '/app/complaints' ? openComplaintsCount : 0}
               />
             ))}
           </ul>
@@ -140,7 +174,6 @@ export function useRailBreadcrumb() {
   const segment = pathname.split('/').pop() || 'events';
   const map = {
     dashboard: 'Dashboard',
-    'editor-progress': 'Editor Progress',
     events: 'Events',
     complaints: 'Complaints',
     settings: 'Settings',
